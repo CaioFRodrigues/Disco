@@ -19,5 +19,9 @@
 
 extern struct t2fs_bootBlock boot_block;
 
+struct file_descriptor {
+    int current_pointer;
+    int first_MFT_tuple;
+}
 
 int init();
