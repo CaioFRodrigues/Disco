@@ -12,6 +12,7 @@
 *   Versão: 16.2
 */
 #include <stdio.h>
+#include <string.h>
 #include "../include/apidisk.h"
 #include "../include/t2fs.h"
 #include "../include/files.h"
@@ -20,8 +21,11 @@
 extern struct t2fs_bootBlock boot_block;
 
 struct file_descriptor {
+
     int current_pointer;
     int first_MFT_tuple;
+    char file_path[MAX_FILE_NAME_SIZE];
+    
 }
 
 int init();
