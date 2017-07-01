@@ -26,6 +26,10 @@ struct t2fs_bootBlock boot_block;
 #define MFTBLOCKSSIZE 8
 #define DISKSECTORSIZE 10
 
+// Mock structures
+int number_files_open;
+struct file_descriptor open_files[20];
+
 int init(){
   int error;
   unsigned char buffer[SECTOR_SIZE];
@@ -53,4 +57,18 @@ int init(){
   printf("%#X\n",boot_block.diskSectorSize);
 
   return 0;
+}
+
+FILE2 findFileHandleByName(char *filepath){
+  
+  int i = 0;
+
+  for (i=0; i<20; i++){
+    if (open_files[i] != NULL && strncmp(filepath, open_files[i].file_path, sizeof(open_files[i].file_path)) == 0){
+        return i;
+    }
+  }
+
+  return -1;  // No open file has the given name name
+
 }
