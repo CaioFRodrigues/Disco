@@ -29,4 +29,4 @@ t2fs.o: $(SRC_DIR)files.c
 	$(CC) -o $(LIB_DIR)t2fs.o -c $(SRC_DIR)files.c $(CONDITIONS)
 
 clean:
-	rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/*.o $(SRC_DIR)/*~ $(INC_DIR)/*~ *~
+	rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/*.o $(SRC_DIR)/*~ $(INC_DIR)/*~ *~ exec

@@ -13,6 +13,11 @@
 */
 #include <stdio.h>
 #include "../include/apidisk.h"
+#include "../include/t2fs.h"
 #include "../include/files.h"
+
+
+extern struct t2fs_bootBlock boot_block;
+
 
 int init();

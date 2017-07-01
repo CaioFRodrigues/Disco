@@ -20,11 +20,11 @@
 
 struct t2fs_bootBlock boot_block;
 
-ID = 0;
-VERSION = 4;
-BLOCKSIZE = 6;
-MFTBLOCKSSIZE = 8;
-DISKSECTORSIZE = 10;
+#define ID 0
+#define VERSION 4
+#define BLOCKSIZE 6
+#define MFTBLOCKSSIZE 8
+#define DISKSECTORSIZE 10
 
 int init(){
   int error;
