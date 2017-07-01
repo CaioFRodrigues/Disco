@@ -11,3 +11,5 @@
 *
 *   Versão: 16.2
 */
+
+void invalidateMFT(struct t2fs_4tupla file)

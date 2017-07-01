@@ -16,28 +16,31 @@
 #include <string.h>
 #include "../include/apidisk.h"
 #include "../include/files.h"
+#include "../include/auxiliar.h"
+
+struct file_descriptor open_files[20];
 
 int delete2(char *filename){
 
-  /*
-  *   Code to find the file_descriptor instance that belongs to the file name
-  *   Must return error code when a struct isn't found (i.e. invalid file name)
-  * return -1;
-  */
-  struct t2fs_4tupla file;  // Mock struct
-  iterateMFT(file);
+  FILE2 handle;
+
+  handle = findFileHandleByName(filename);
+  if (handle == -1)
+    return handle;
+
+  iterateMFT(open_files[handle]);
 
   return 0;
 }
 
-void iterateMFT(struct t2fs_4tupla file){
+void invalidateMFT(struct t2fs_4tupla file){
   if (file.atributeType == 1){
     file.atributeType = -1;
     /*
     *   Code to get the next MFT tuple structure
     */
     struct t2fs_4tupla next_tuple; // Mock struct
-    iterateMFT(next_tuple);
+    invalidateMFT(next_tuple);
   }
   else if (file.atributeType == 0){ // Last MFT tuple for the file, end recursion
     file.atributeType = -1;
