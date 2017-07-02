@@ -41,6 +41,10 @@ int main(int argc, char *argv[])
 
 	printf("%#X\n",boot_block.diskSectorSize);
 
+	int first_empty_reg_MFT = find_empty_MFT_reg();
+
+	printf("First empty MFT sector: %d\n", first_empty_reg_MFT);
+
 	// char	command[128];
 	// char	*cmd;
 	
@@ -79,11 +83,11 @@ int main(int argc, char *argv[])
 	// 		for (linha=0; linha<16; ++linha) {
 	// 		    printf ("%04X  ", linhaBase+16*linha);
 	// 		    for (coluna=0; coluna<16; ++coluna) {
-	// 			int index = 16*linha+coluna;
-	// 			char c = buffer[index];
-	// 			if (c>=' ' && c<='z') str[coluna]=c;
-	// 			else str[coluna]=' ';
-	// 			printf ("%02X ", c&0xFF);
+	// 				int index = 16*linha+coluna;
+	// 				char c = buffer[index];
+	// 				if (c>=' ' && c<='z') str[coluna]=c;
+	// 				else str[coluna]=' ';
+	// 				printf ("%02X ", c&0xFF);
 	// 		    }
 	// 		    str[16]='\0';
 	// 		    printf (" *%s*\n", str);
@@ -99,5 +103,5 @@ int main(int argc, char *argv[])
 	// 	printf("Comando nao reconhecido.\n");
 	// }
 
- //    return 0;
+    return 0;
 }

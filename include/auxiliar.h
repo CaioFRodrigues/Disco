@@ -21,3 +21,5 @@ extern struct t2fs_bootBlock boot_block;
 
 
 int init();
+
+int find_empty_MFT_reg();

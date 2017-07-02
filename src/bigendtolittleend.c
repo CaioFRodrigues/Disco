@@ -3,38 +3,37 @@
 #include <string.h>
 
 // str must be hexadecimal string like "5432" for ex
-unsigned int swap_endianess(unsigned char *str)
+unsigned int swap_4BYTE_endianess(unsigned int hex)
 {
-    if(strlen(str) == 4){
-        unsigned int num = (unsigned int)strtol((char *)str, NULL, 16);
+    unsigned int swapped = ((hex>>24)&0xff) | // move byte 3 to byte 0
+                           ((hex<<8)&0xff0000) | // move byte 1 to byte 2
+                           ((hex>>8)&0xff00) | // move byte 2 to byte 1
+                           ((hex<<24)&0xff000000); // byte 0 to byte 3
 
-        unsigned int swapped = ((num>>24)&0xff) | // move byte 3 to byte 0
-                               ((num<<8)&0xff0000) | // move byte 1 to byte 2
-                               ((num>>8)&0xff00) | // move byte 2 to byte 1
-                               ((num<<24)&0xff000000); // byte 0 to byte 3
-        swapped = swapped>>16;
-
-//        printf("%ld\n", sizeof(swapped));
-
-
-        return swapped;
-    }
-    else
-        return 0;
+    return swapped;
 
 }
 
 
-// hex must be a simple 2 byte char like "54" for ex
-unsigned char conv_hex_to_string(unsigned char *hex)
+unsigned int conv_string_to_hex(unsigned char *buffer, unsigned int position, int size)
 {
-    if(strlen(hex) == 2){
-        unsigned int c = (unsigned int)strtol((char *)hex, NULL, 16);
+        unsigned int hex;
+        if(size == 2){
+            hex = (buffer[position+1] << 8) | buffer[position];
 
-        return c;
-    }
-    else
-        return 0;
+        }
+        else if(size == 4){
+            int aux = (buffer[position] << 24) |
+                        (buffer[position+1] << 16) |
+                        (buffer[position+2] << 8) |
+                        buffer[position+3];
+
+            hex = swap_4BYTE_endianess(aux);
+        }
+        else
+            return -1;
+
+        return hex;
 }
 
 //

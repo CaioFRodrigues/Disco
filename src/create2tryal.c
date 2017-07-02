@@ -25,39 +25,32 @@ TYPEVAL_DIRETORIO   0x02 -> 2
 int find_empty_MFT_reg()
 {
 	unsigned char buffer[SECTOR_SIZE];
-	unsigned char buffer2[SECTOR_SIZE];
 
-	int full_MFT = 0;
+	int full_MFT = -1;
 
 	unsigned int SIZE_of_MFT_setores = ((unsigned int)boot_block.blockSize) * ((unsigned int)boot_block.MFTBlockSize);
-	// unsigned int LAST_MFT_sector = 
+
 	// first empty MFT register must be at block 4
 	unsigned int first_MFT_sector = (unsigned int)boot_block.blockSize;
 	unsigned int first_MFT_usable_sector = first_MFT_sector + SIZE_of_MFT_REGISTER_sector * 4; // reg0 = Bitmap; reg1 = root; reg2 and reg3 = reserved
 
-	// this shall got to every register in the MFT
+	// this shall get every register in the MFT
 	for(int i = first_MFT_usable_sector; i <= SIZE_of_MFT_setores; i = i + SIZE_of_MFT_REGISTER_sector){
 		int error = read_sector(i, buffer);
 		if(error){
-			printf("\nError at Find_empty_MFT_reg, i: %i, error: %d\n", i, error);
+			printf("\nError at find_empty_MFT_reg, i: %i, error: %d\n", i, error);
 			return -1;
 		}
 
-		DWORD atrType = (buffer[ATRIB_TYPE+3] << 16) | 
-						(buffer[ATRIB_TYPE+2] << 12) |
-						(buffer[ATRIB_TYPE+1] << 8) |
-						buffer[ATRIB_TYPE];
+		
 
 		if(atrType != -1){
 			continue;
 		}
 		else{
+			return i; //address
 
-
-			return //address
 		}
-
-
 
 	}
 
@@ -65,10 +58,31 @@ int find_empty_MFT_reg()
 	return full_MFT;
 }
 
+// unsigned int swap_4BYTE_endianess(unsigned char *str)
+// {
+//     if(strlen(str) == 4){
+//         unsigned int num = (unsigned int)strtol((char *)str, NULL, 16);
+
+//         unsigned int swapped = ((num>>24)&0xff) | // move byte 3 to byte 0
+//                                ((num<<8)&0xff0000) | // move byte 1 to byte 2
+//                                ((num>>8)&0xff00) | // move byte 2 to byte 1
+//                                ((num<<24)&0xff000000); // byte 0 to byte 3
+//         // swapped = swapped>>16;
+
+// //        printf("%ld\n", sizeof(swapped));
+
+
+//         return swapped;
+//     }
+//     else
+//         return 0;
+
+// }
 
 int generic_create(BYTE type, char *filename)
 {
 	int empty_block;
+	int empty_MFT_reg;
 	// struct t2fs_record arch;
 	
 	if(type == TYPEVAL_REGULAR){
@@ -81,6 +95,7 @@ int generic_create(BYTE type, char *filename)
 			arch.blocksFileSize = 1; // init file with 1 block
 			arch.bytesFileSize = SECTOR_SIZE * boot_block.blockSize;
 			// find MFTNumber
+			empty_MFT_reg = find_empty_MFT_reg()
 
 
 		}
@@ -93,6 +108,8 @@ int generic_create(BYTE type, char *filename)
 
 FILE2 create2 (char *filename){
 	FILE2 handle;
+
+	char nameAux[MAX_FILE_NAME_SIZE];
 
 
 	return handle;
