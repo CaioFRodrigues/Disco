@@ -18,22 +18,22 @@
 #include "../include/t2fs.h"
 #include "../include/bitmap2.h"
 #include "../include/files.h"
+#include "../include/MFT.h"
+#include "../include/MFT_list.h"
 
-// Mock array to represent the pointers to the open files
-int file_handles[20];
-t2fs_4tupla t2fs_directories[20];
-
+//Ana
 int seek2(FILE2 handle, DWORD offset){
 
-  if (offset != -1){
-    file_handles[handle] += offset;
+  MFT* mft_list;
+  mft_list = read_MFT(opened_files[handle].first_MFT_tuple);
+
+  if (offset != -1){  // Offset always counted from the start of the file (current_pointer = 0) 
+    opened_files[handle].current_pointer = offset;
   }
   else{
-    file_handles = t2fs_directories[handle].logicalBlockNumber + t2fs_directories[handle].numberOfContiguosBlocks + 1;
+    // current_pointer must go to the byte right after the end of the file (0 to fileSizeBytes -1)
+    opened_files[handle].current_pointer = opened_files[handle].fileSizeBytes;
   }
-
-  /* Se o valor de "offset" for "-1", o current_pointer deverá ser posicionado no byte seguinte ao final do arquivo,
-		Isso é útil para permitir que novos dados sejam adicionados no final de um arquivo já existente*/
 
   return 0;
 }
