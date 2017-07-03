@@ -111,10 +111,14 @@ struct t2fs_4tupla fill_MFT(unsigned char* buffer, int MFT_4tupla_number){
 }
 
 //Caio
-//Given a directory name and a MFT describing a directory, goes through the directory and gets the number of the next MFT
-//returns -1 if the MFT is not found
-//returns 0 if the file was found
-int get_next_MFT(char *dirname, MFT* directory, int mode){
+//Given a filename and a MFT describing a directory, goes through the directory and gets the MFT of the filename
+//filename: name of the file to be searched
+//directory: MFT struct of a directory
+//
+
+//If filename is not on the directory, returns -1
+//
+int get_MFTnumber_of_file_with_directory_MFT(char *filename, MFT* directory, int mode){
 	//Auxiliar iterator
 	MFT* aux = directory;
 
@@ -123,18 +127,57 @@ int get_next_MFT(char *dirname, MFT* directory, int mode){
 
 		//For every node goes through the contiguous blocks
 		for (int current_block = 0; current_block < aux->current_MFT.numberOfContiguosBlocks; current_block++){
+
 			//Gets next position by comparing the strings
-			int next = get_MFT_from_filename_of_dir(aux->current_MFT.logicalBlockNumber + current_block, dirname, mode);
+			int next = get_MFTnumber_from_directory_datablock(aux->current_MFT.logicalBlockNumber + current_block, filename, mode);
 			
-			//If next is valid
-			if (next != 0)
+			//If it has found the file,returns it
+			if (next != -1)
 				return next;
+
 		}
 
 		aux = aux->next;
+
 	}
 
-	return 0;
+  //No file was found on the directory
 
+	return -1;
+
+
+}
+
+//Caio
+//Given a MFT number corresponding to a directory, goes through the directory searching for a file and returns the file's MFT number
+//filename: name of the file to be searched in the directory
+//directory_MFT: Number of the MFT to be searched
+//mode: Decides if the file will search for directory or regular file
+//      1 - Regular file
+//      2 - Directory file
+//returns the file MFT number or 0 if the function fails
+int get_MFTnumber_of_file_with_directory_number(char * filename, int directory_MFT, int mode){
+
+  //Gets the MFT of the MFT_number that was passed
+  MFT * current_dir_MFT = read_MFT(directory_MFT);
+
+  
+  //Gets the position based on the current directory
+  int searched_file_MFT = get_MFTnumber_of_file_with_directory_MFT(filename, current_dir_MFT, mode);
+
+  //Once the new file MFTNumber was found, the current directory MFT is no longer needed
+  free_MFT(current_dir_MFT);
+
+  //If the file is valid
+  if (searched_file_MFT != -1){
+    //Returns the found MFT
+    return searched_file_MFT;
+
+  }  
+  //There is no file with that name on this directory 
+  else      
+      return -1;
+
+  
 
 }

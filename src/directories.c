@@ -15,7 +15,7 @@
 #include "../include/directories.h"
 
 //Caio
-//Given a block from a directory and a name, finds the MFT sector belonging to that name
+//Given a block number from a directory and a name, finds the MFT sector belonging to that name
 //Parameters:
 //block: Block to be searched in disk
 //*name: string to be searched in the directory
@@ -25,7 +25,7 @@
 
 //Return: MFT of the file with name *name
 //if it fails, returns 0 
-int get_MFT_from_filename_of_dir(int block, char *name, int mode){
+int get_MFTnumber_from_directory_datablock(int block, char *name, int mode){
   unsigned char buffer[SECTOR_SIZE];
 
   //For every sector in a block

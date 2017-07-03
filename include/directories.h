@@ -33,7 +33,7 @@
 
 struct t2fs_record fill_directory(unsigned char* buffer, int directory_number);
 
-int get_MFT_from_filename_of_dir(int block, char *name, int mode);
+int get_MFTnumber_from_directory_datablock(int block, char *name, int mode);
 
 
 #endif

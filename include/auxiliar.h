@@ -40,8 +40,8 @@ extern struct t2fs_bootBlock boot_block;
 typedef struct file_descriptor {
 
     int current_pointer; //Has the virtual block of the position in the current file
+    int first_MFT_tuple; // Has the MFT position of the file
     char *file_path; //Current file_path with the format: /dir1/dir2/dir3/file
-   	MFT *file_MFT; //Has the file MFT list
     int is_valid; //Checks whether the current descriptor is actually opened or not
    
 } FILE_DESCRIPTOR;

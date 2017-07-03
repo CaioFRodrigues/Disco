@@ -104,8 +104,17 @@ int main(int argc, char *argv[])
 	init();
 	//MFT * my_mft = read_MFT(8);
 	//printf ("\n%d\n", get_MFT_from_filename_and_dir(2050, "file1"));
-	char file[6] = "/file2";
-    open2 (file);
-    printf ("%d", opened_files[0].file_MFT->sector);
+
+
+	// char file[6] = "/file2";
+ //    open2 (file);
+ //    printf ("%d", opened_files[0].file_MFT->sector);
+
+
+	
+	
+
     return 0;
+
+
 }
