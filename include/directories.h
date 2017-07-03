@@ -12,6 +12,29 @@
 *   Versão: 16.2
 */
 
+
+#ifndef __DIRECTORIESH__
+#define __DIRECTORIESH__
+
+#define RECORD_SIZE 64 //Size of the struct t2fs_record in bytes
+#define NAME_SIZE 51
+
+#define NAME_START 1
+#define BLOCKS_FILE_SIZE_START 52
+#define BYTES_FILE_SIZE_START 56
+#define MFT_NUMBER_START 60
+
+#define RECORDS_PER_SECTOR 4
+
 #include <stdio.h>
-#include "../include/apidisk.h"
-#include "../include/directories.h"
+#include <string.h>
+
+#include "../include/auxiliar.h"
+
+struct t2fs_record fill_directory(unsigned char* buffer, int directory_number);
+
+int get_MFT_from_filename_of_dir(int block, char *name, int mode);
+
+
+#endif
+

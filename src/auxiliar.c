@@ -13,23 +13,16 @@
 */
 #include <string.h>
 #include <stdio.h>
-#include "../include/apidisk.h"
-#include "../include/files.h"
-#include "../include/t2fs.h"
+
+
 #include "../include/auxiliar.h"
 
 struct t2fs_bootBlock boot_block;
 
-#define ID 0
-#define VERSION 4
-#define BLOCKSIZE 6
-#define MFTBLOCKSSIZE 8
-#define DISKSECTORSIZE 10
 
-// Mock structures
-int number_files_open;
-struct file_descriptor open_files[20];
 
+//Ana
+//Initializes the boot block with the info from the file
 int init(){
   int error;
   unsigned char buffer[SECTOR_SIZE];
@@ -42,33 +35,41 @@ int init(){
   for (i=ID; i<ID+4; i++){
       boot_block.id[i]=buffer[i];
   }
-  printf("%s\n", boot_block.id);
 
   boot_block.version = (buffer[VERSION+1] << 8) | buffer[VERSION];
-  printf("%#X\n",boot_block.version);
 
   boot_block.blockSize = (buffer[BLOCKSIZE+1] << 8) | buffer[BLOCKSIZE];
-  printf("%#X\n",boot_block.blockSize);
 
   boot_block.MFTBlocksSize = (buffer[MFTBLOCKSSIZE+1] << 8) | buffer[MFTBLOCKSSIZE];
-  printf("%#X\n",boot_block.MFTBlocksSize);
 
   boot_block.diskSectorSize = (buffer[DISKSECTORSIZE+3] << 16) | (buffer[DISKSECTORSIZE+2] << 12) | (buffer[DISKSECTORSIZE+1] << 8) | buffer[DISKSECTORSIZE];
-  printf("%#X\n",boot_block.diskSectorSize);
+
+  initialize_open_files();
 
   return 0;
 }
 
-FILE2 findFileHandleByName(char *filepath){
-  
-  int i = 0;
 
-  for (i=0; i<20; i++){
-    if (open_files[i] != NULL && strncmp(filepath, open_files[i].file_path, sizeof(open_files[i].file_path)) == 0){
-        return i;
-    }
+//Caio
+//Initializes the array of opened files
+void initialize_open_files(){
+
+  for(int i = 0; i < MAX_OPENED_FILES; i++)
+    opened_files[i].is_valid = 0;
+
+}
+
+
+//Caio
+//Gets first possible position from opened_files
+//Returns -1 if 20 files have been opened
+int first_free_file_position(){
+
+  for (int i = 0; i < MAX_OPENED_FILES; i++){
+    if (!opened_files[i].is_valid)
+      return i;
   }
 
-  return -1;  // No open file has the given name name
+  return -1;
 
 }
