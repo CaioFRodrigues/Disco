@@ -43,6 +43,7 @@ typedef struct file_descriptor {
     int first_MFT_tuple; // Has the MFT position of the file
     char *file_path; //Current file_path with the format: /dir1/dir2/dir3/file
     int is_valid; //Checks whether the current descriptor is actually opened or not
+    int fileSizeBytes;
    
 } FILE_DESCRIPTOR;
 
