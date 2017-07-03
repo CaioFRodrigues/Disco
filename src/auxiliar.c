@@ -16,19 +16,11 @@
 
 
 #include "../include/auxiliar.h"
+#include "../include/MFT.h"
+#include "../include/MFT_list.h"
 
 struct t2fs_bootBlock boot_block;
 
-<<<<<<< HEAD
-#define ID 0
-#define VERSION 4
-#define BLOCKSIZE 6
-#define MFTBLOCKSSIZE 8
-#define DISKSECTORSIZE 10
-=======
-
-
->>>>>>> auxiliar_fix
 //Ana
 //Initializes the boot block with the info from the file
 int init(){
@@ -57,7 +49,6 @@ int init(){
   return 0;
 }
 
-
 //Caio
 //Initializes the array of opened files
 void initialize_open_files(){
@@ -81,3 +72,25 @@ int first_free_file_position(){
   return -1;
 
 }
+
+//Ana
+DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT_list* mft_list){
+
+  MFT_list* mft_list_copy = mft_list;  
+  DWORD currentVirtualBlockNumber, numberOfContiguosBlocks;
+
+  while (mft_list_copy != NULL){
+      
+    currentVirtualBlockNumber = mft_list_copy->current_MFT.virtualBlockNumber;
+    numberOfContiguosBlocks = mft_list_copy->current_MFT.numberOfContiguosBlocks;
+    
+    if (numberOfContiguosBlocks + currentVirtualBlockNumber - 1 < current_pointer){ // If current_pointer is not mapped in this tuple
+      mft_list_copy = mft_list_copy->next;
+    }
+    else{
+      // currentVirtualBlockNumber maps to logicalBlockNumber, current_pointer = logicalBlockNumber + offset
+      return mft_list_copy->current_MFT.logicalBlockNumber + (current_pointer - currentVirtualBlockNumber);
+    }
+  }
+}
+

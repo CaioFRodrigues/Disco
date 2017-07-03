@@ -58,5 +58,6 @@ void initialize_open_files();
 
 int first_free_file_position();
 
+int virtual_block_to_logical_block(DWORD current_pointer);
 
 #endif
