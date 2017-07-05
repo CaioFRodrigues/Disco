@@ -75,7 +75,7 @@ int first_free_file_position(){
 }
 
 //Ana
-int virtual_block_to_logical_block(DWORD current_pointer, MFT_list* mft_list){
+int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list){
 
   MFT_list* mft_list_copy = mft_list;  
   DWORD currentVirtualBlockNumber, numberOfContiguosBlocks;
@@ -85,12 +85,12 @@ int virtual_block_to_logical_block(DWORD current_pointer, MFT_list* mft_list){
     currentVirtualBlockNumber = mft_list_copy->current_MFT.virtualBlockNumber;
     numberOfContiguosBlocks = mft_list_copy->current_MFT.numberOfContiguosBlocks;
     
-    if (numberOfContiguosBlocks + currentVirtualBlockNumber - 1 < current_pointer){ // If current_pointer is not mapped in this tuple
+    if (numberOfContiguosBlocks + currentVirtualBlockNumber - 1 < current_virtual_block){ // If current_virtual_block is not mapped in this tuple
       mft_list_copy = mft_list_copy->next;
     }
     else{
-      // currentVirtualBlockNumber maps to logicalBlockNumber, current_pointer = logicalBlockNumber + offset
-      return mft_list_copy->current_MFT.logicalBlockNumber + (current_pointer - currentVirtualBlockNumber);
+      // currentVirtualBlockNumber maps to logicalBlockNumber, current_virtual_block = logicalBlockNumber + offset
+      return mft_list_copy->current_MFT.logicalBlockNumber + (current_virtual_block - currentVirtualBlockNumber);
     }
   }
 }
@@ -101,7 +101,7 @@ int virtual_block_to_logical_block(DWORD current_pointer, MFT_list* mft_list){
 //  Example: bytes = 500
 //  The 500th byte will be in the file's second virtualBlock, and it will
 //be the 12th byte from the beginning of the equivalent logicacl block
-int find_byte_position_in_logical_block(MFT_list* mft, int bytes){
+int find_byte_position_in_logical_block(MFT* mft, int bytes){
   
   int num_sectors, num_blocks, current_logical_block_number, offsets_bytes;
 
