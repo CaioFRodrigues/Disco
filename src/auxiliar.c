@@ -13,6 +13,7 @@
 */
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 
 #include "../include/auxiliar.h"
@@ -74,7 +75,7 @@ int first_free_file_position(){
 }
 
 //Ana
-DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT_list* mft_list){
+int virtual_block_to_logical_block(DWORD current_pointer, MFT_list* mft_list){
 
   MFT_list* mft_list_copy = mft_list;  
   DWORD currentVirtualBlockNumber, numberOfContiguosBlocks;
@@ -94,3 +95,21 @@ DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT_list* mft_list){
   }
 }
 
+// Ana
+//  Given a byte offset and an mft list, finds the byte offset relative to the 
+//logical block number in which the wanted byte will be
+//  Example: bytes = 500
+//  The 500th byte will be in the file's second virtualBlock, and it will
+//be the 12th byte from the beginning of the equivalent logicacl block
+int find_byte_position_in_logical_block(MFT_list* mft, int bytes){
+  
+  int num_sectors, num_blocks, current_logical_block_number, offsets_bytes;
+
+  num_sectors = ceil(bytes/256);
+  num_blocks = ceil(num_sectors/boot_block.MFTBlocksSize);
+
+  offsets_bytes = (num_blocks * num_sectors * 256) - bytes;
+  
+  return offsets_bytes;
+
+}
