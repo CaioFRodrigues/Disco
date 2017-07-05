@@ -28,13 +28,18 @@ int truncate2 (FILE2 handle){
   int current_pointer = opened_files[handle].current_pointer;
   MFT* mft = read_mft(opened_files[handle].first_MFT_tuple);
   clear_file(mft, current_pointer);
+  opened_files[handle].fileSizeBytes = current_pointer + 1;
 }
 
 // Ana
 int delete2 (char *filename){
 
-  // TODO: find file mft list from filename;
-  // If filename can't be found, return -1
+  /*
+  * TODO:
+  *     Return -1 if filename is invalid
+  *     Check if file is opened
+  *       If it is, in the end of the process its file descriptor must be marked as invalid
+  */
 
   MFT* mft; // Mock structure
   clear_file(mft, 0);
@@ -54,8 +59,8 @@ int clear_file(MFT* mft, int current_pointer){
   int current_virtual_block; //TODO: find this number
   
   // Update file size in bytes and blocks
-  file_register.bytesFileSize = current_pointer;
-  file_register.blocksFileSize = current_virtual_block;
+  file_register.bytesFileSize = current_pointer + 1;
+  file_register.blocksFileSize = current_virtual_block + 1;
 
   while (mft != NULL){
     if (mft->current_MFT.virtualBlockNumber + mft->current_MFT.numberOfContiguosBlocks - 1 < current_virtual_block){
