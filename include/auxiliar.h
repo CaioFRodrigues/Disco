@@ -61,4 +61,6 @@ int first_free_file_position();
 
 int virtual_block_to_logical_block(DWORD current_pointer);
 
+int find_byte_position_in_logical_block(MFT_list mft,int bytes)
+
 #endif
