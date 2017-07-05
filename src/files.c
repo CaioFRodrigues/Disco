@@ -24,8 +24,12 @@
 //Ana
 int seek2(FILE2 handle, DWORD offset){
 
-  MFT* mft_list;
-  mft_list = read_MFT(opened_files[handle].first_MFT_tuple);
+  // Error cases
+  if (!opened_files[handle].is_valid)
+    return -1;
+
+  if (offset > opened_files[handle].fileSizeBytes)
+    return -1;
 
   if (offset != -1){  // Offset always counted from the start of the file (current_pointer = 0) 
     opened_files[handle].current_pointer = offset;
