@@ -18,32 +18,57 @@
 #include "../include/files.h"
 #include "../include/auxiliar.h"
 
-struct file_descriptor open_files[20];
 
-int delete2(char *filename){
+// Ana
+int truncate2 (FILE2 handle){
+  
+  if (!opened_files[handle].is_valid)
+    return -1;
 
-  FILE2 handle;
-
-  handle = findFileHandleByName(filename);
-  if (handle == -1)
-    return handle;
-
-  iterateMFT(open_files[handle]);
-
-  return 0;
+  int current_pointer = opened_files[handle].current_pointer;
+  MFT* mft = read_mft(opened_files[handle].first_MFT_tuple);
+  clear_file(mft, current_pointer);
 }
 
-void invalidateMFT(struct t2fs_4tupla file){
-  if (file.atributeType == 1){
-    file.atributeType = -1;
-    /*
-    *   Code to get the next MFT tuple structure
-    */
-    struct t2fs_4tupla next_tuple; // Mock struct
-    invalidateMFT(next_tuple);
-  }
-  else if (file.atributeType == 0){ // Last MFT tuple for the file, end recursion
-    file.atributeType = -1;
-  }
+// Ana
+int delete2 (char *filename){
 
+  // TODO: find file mft list from filename;
+  // If filename can't be found, return -1
+
+  MFT* mft; // Mock structure
+  clear_file(mft, 0);
+}
+
+// Ana
+int clear_file(MFT* mft, int current_pointer){
+  
+  /*
+  * TODO:
+  *   Make sure to save the changes in the file register and the mft in the disk, not only in memory
+  */
+
+  t2fs_record file_register; // Mock structure
+
+  int byte_position = find_byte_position_in_logical_block(mft, current_pointer);
+  int current_virtual_block; //TODO: find this number
+  
+  // Update file size in bytes and blocks
+  file_register.bytesFileSize = current_pointer;
+  file_register.blocksFileSize = current_virtual_block;
+
+  while (mft != NULL){
+    if (mft->current_MFT.virtualBlockNumber + mft->current_MFT.numberOfContiguosBlocks - 1 < current_virtual_block){
+      mft = mft->next;  // Byte in which the trucation starts is not in this MFT tuple
+    }
+    else{
+      if (mft->current_MFT.virtualBlockNumber > current_virtual_block){
+        mft->current_MFT.atributeType = -1; // Invalidate MFT tuple
+      }
+      else{
+        //Byte in which the truncation starts belongs to this MFT
+        mft->current_MFT.numberOfContiguosBlocks =  mft->current_MFT.numberOfContiguosBlocks - (current_virtual_block - mft->current_MFT.virtualBlockNumber);
+      }
+    }
+  }
 }
