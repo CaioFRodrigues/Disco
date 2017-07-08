@@ -22,7 +22,10 @@ void help() {
 int main(int argc, char *argv[])
 {	
 	char* buffer;
+	buffer = malloc(sizeof(unsigned char)*(16));
+
 	read2(0, buffer, 16);
+	printf("%s\n", buffer);
 	// read_bytes_from_sector(12, 16);
     return 0;
 }

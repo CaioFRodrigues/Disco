@@ -26,17 +26,10 @@
 // Ana
 int read2(FILE2 handle, char * buffer, int size){
 
-  /*
-  *   TODO:
-  *     Concatenate buffer_ to final buffer
-  *
-  */
-
   // MFT* mft = read_MFT(opened_files[handle].first_MFT_tuple);
   MFT* mft = read_MFT(12);
-  unsigned char buffer_[size];
-  unsigned char temp_buffer[SECTOR_SIZE];
-  while (mft != NULL){
+  unsigned char sector_buffer[SECTOR_SIZE];
+  while (mft != NULL && size > 0){
 
     int first_block = mft->current_MFT.logicalBlockNumber;
     int number_blocks = mft->current_MFT.numberOfContiguosBlocks;
@@ -46,10 +39,12 @@ int read2(FILE2 handle, char * buffer, int size){
 
     int i =0,j=0;
     int first_byte = 3;
+
     int current_sector_pointer = 0;
     for (i=0; i<num_sectors; i++){
       current_sector_pointer = 0;
-      read_sector(i+first_sector, temp_buffer);
+      read_sector(i+first_sector, sector_buffer);
+
       int sector_current = ceil(ceil(first_byte/256.0)/4.0)-1;
 
       if (sector_current == i){
@@ -57,29 +52,28 @@ int read2(FILE2 handle, char * buffer, int size){
       }
 
       if (size + current_sector_pointer > 256){ // If the amount of bytes to read is bigger than the amount of bytes in the sector
-        for (j=current_sector_pointer; j<256; j++)
-          printf("%02X", buffer_[j]);
-        printf("\n*****\n");
+        int k =0;
+        for (j=current_sector_pointer; j<256; j++){
+          buffer[k] = sector_buffer[j];
+          k++;
+        }
 
-        // Copy bytes from current_sector_pointer till end of buffer
-        // Write a function for this that takes as parameters begin and end to reuse it down there
         size -= (256 - current_sector_pointer);
       }
       else{ // If all bytes to be read are in this sector
-        for (j=current_sector_pointer; j<size+current_sector_pointer; j++)
-          printf("%c", temp_buffer[j]);
-        printf("\n*****\n");
-
-        // Copy bytes from current_sector_pointer till size
+        int k =0;
+        for (j=current_sector_pointer; j<size+current_sector_pointer; j++){
+          buffer[k] = sector_buffer[j];
+          k++;
+        }
         goto END;
-      }
 
-      // printf("%s\n", buffer_);
+      }
     }
     mft = mft->next;
   }
   END:
-    printf("READ EVERYTHING\n");
+  // printf("%s\n", temp_buffer);
 
   return 0;
 }
