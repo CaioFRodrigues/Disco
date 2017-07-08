@@ -77,7 +77,7 @@ int first_free_file_position(){
 //Ana
 int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list){
 
-  MFT_list* mft_list_copy = mft_list;  
+  MFT* mft_list_copy = mft_list;  
   DWORD currentVirtualBlockNumber, numberOfContiguosBlocks;
 
   while (mft_list_copy != NULL){

@@ -10,111 +10,69 @@
 #include "../include/MFT_list.h"
 #include "../include/MFT.h"
 #include "../include/directories.h"
-void help() {
-
-	printf ("Testing program - read and write setores do arquivo t2fs_disk.dat\n");
-	printf ("   DISPLAY - d <setor>\n");
-	printf ("\n");
-	printf ("   HELP    - ?\n");
-	printf ("   FIM     - f\n");
-}
 
 int main(int argc, char *argv[])
 {
-
-	// init();
-
-	// int position;
-	// position = searchBitmap2(0);
-
-	// printf("Primeiro bloco livre: %d\n", position);
-
-	// int blockNumber = 4;
-	// printf("Printando %d bitmap:\n", blockNumber);
-
-	// printf("%d\n", getBitmap2(blockNumber));
-
-	// printf("%s\n", boot_block.id);
-
-	// printf("%#X\n",boot_block.version);
-
-	// printf("%#X\n",boot_block.blockSize);
-
-	// printf("%#X\n",boot_block.MFTBlocksSize);
-
-	// printf("%#X\n",boot_block.diskSectorSize);
-
-	// char	command[128];
-	// char	*cmd;
+	char *buffer;
+	char content[] = " TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO TESTANDO";
+	buffer = malloc(sizeof(unsigned char) * 256);
 	
-	// help();
-	// while (1) {
-	// 	printf ("CMD> ");
-	// 	gets(command);
-	// 	if (strlen(command)==0)
-	// 		continue;
-	
-	// 	cmd = strtok(command, " ");
-	
-	// 	if (strcmp(cmd,"?")==0) {
-	// 		help();
-	// 		continue;
-	// 	}
-	
-	// 	if (strcmp(cmd,"d")==0) {
-	// 		// comando d (display)
-	// 		unsigned char buffer[SECTOR_SIZE];
-	// 		char *p1 = strtok(NULL, " ");
-	// 		if (p1==NULL) {
-	// 			printf ("Erro no comando.\n");
-	// 			continue;
-	// 		}
-	// 		int sector = atoi(p1);
-	// 		int error = read_sector (sector, buffer);
-	// 		if (error) {
-	// 			printf ("read_sector (%d) error = %d\n", sector, error);
-	// 			continue;
-	// 		}
-	
-	// 		char str[20];
-	// 		int linhaBase = SECTOR_SIZE * sector;
-	// 		int linha, coluna;
-	// 		for (linha=0; linha<16; ++linha) {
-	// 		    printf ("%04X  ", linhaBase+16*linha);
-	// 		    for (coluna=0; coluna<16; ++coluna) {
-	// 			int index = 16*linha+coluna;
-	// 			char c = buffer[index];
-	// 			if (c>=' ' && c<='z') str[coluna]=c;
-	// 			else str[coluna]=' ';
-	// 			printf ("%02X ", c&0xFF);
-	// 		    }
-	// 		    str[16]='\0';
-	// 		    printf (" *%s*\n", str);
-	// 		}
-	// 		continue;
-	// 	}
-	
-	// 	if (strcmp(cmd,"f")==0) {
-	// 		printf ("Fim.\n");
-	// 		break;
-	// 	}
-	
-	// 	printf("Comando nao reconhecido.\n");
-	// }
-	init();
-	//MFT * my_mft = read_MFT(8);
-	//printf ("\n%d\n", get_MFT_from_filename_and_dir(2050, "file1"));
+	write2(0, content, 1080);
 
+	int i =0;
 
-	// char file[6] = "/file2";
- //    open2 (file);
- //    printf ("%d", opened_files[0].file_MFT->sector);
+	for (i=2040; i<2060; i++){
+		printf("%d\n", getBitmap2(i));
+	}
 
+	printf("\n%d", searchBitmap2(0));
 
-	
-	
-
-    return 0;
-
-
+	return 0;
 }
+
+// int write_first_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t)
+// {
+// 	unsigned char buffer[SECTOR_SIZE];
+// 	int error = read_sector(sector, buffer);
+// 	unsigned int zero = 0x00;
+// 	if (error)
+// 		return -1;
+
+// 	unsigned int aux;
+// 	// write AtributeType in the first tuple in the MFT
+// 	int i;
+// 	for (i = 0; i < 4; i++)
+// 	{
+// 		aux = (t.atributeType >> 8 * i) & 0xff;
+// 		buffer[TUPLE_ATRTYPE + i] = aux;
+// 	}
+// 	// write virtualBlockNumber
+// 	for (i = 0; i < 4; i++)
+// 	{
+// 		aux = (t.virtualBlockNumber >> 8 * i) & 0xff;
+// 		buffer[TUPLE_VBN + i] = aux;
+// 	}
+// 	// write logicalBlockNumber
+// 	for (i = 0; i < 4; i++)
+// 	{
+// 		aux = (t.logicalBlockNumber >> 8 * i) & 0xff;
+// 		buffer[TUPLE_LBN + i] = aux;
+// 	}
+// 	// write numberOfContiguousBocks
+// 	for (i = 0; i < 4; i++)
+// 	{
+// 		aux = (t.numberOfContiguosBlocks >> 8 * i) & 0xff;
+// 		buffer[TUPLE_NUMCONTIGBLOCK + i] = aux;
+// 	}
+// 	// write 0 in the second tuple
+// 	for (i = 0; i < 4; i++)
+// 	{
+// 		buffer[TUPLE_ATRTYPE + 16 + i] = zero;
+// 	}
+
+// 	int write_error = write_sector(sector, buffer);
+// 	if (write_error)
+// 		return -1;
+
+// 	return 1;
+// }
