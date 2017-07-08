@@ -113,3 +113,13 @@ int find_byte_position_in_logical_block(MFT* mft, int bytes){
   return offsets_bytes;
 
 }
+
+// Ana
+char* append_buffers( char* final_buffer, char* temp_buffer ){
+  while (*final_buffer)
+    final_buffer++;
+  
+  while (*final_buffer++ = *temp_buffer++);
+
+  return --final_buffer;
+}

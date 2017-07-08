@@ -63,4 +63,6 @@ int virtual_block_to_logical_block(DWORD current_pointer);
 
 int find_byte_position_in_logical_block(MFT* mft,int bytes)
 
+char* append_buffers( char* final_buffer, char* temp_buffer )
+
 #endif
