@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "../include/apidisk.h"
+#include "../include/bitmap2.h"
 #include "../include/files.h"
 #include "../include/t2fs.h"
 #include "../include/auxiliar.h"
@@ -72,7 +73,7 @@ FILE2 create2(char *filename)
   unsigned int byte_position;
   unsigned int byte_sector;
   unsigned int byte_record_pos;
-  unsigned int empty_block = searchBitmap2(0);
+  unsigned int empty_block = (unsigned int)searchBitmap2(0);
   // unsigned int empty_sector = empty_block * 4;
   unsigned int MFT_sec = 6; // stars with root register, which is the register 1
   struct t2fs_4tupla emptyTupla;
@@ -194,7 +195,7 @@ FILE2 create2(char *filename)
 // Arateus
 int mkdir2 (char *pathname)
 {
-  int handle;
+  // int handle;
   char *token, *filenamecopy;
   int depht = 0; // 0 - is root
   unsigned int empty_MFTRegister;
@@ -202,8 +203,8 @@ int mkdir2 (char *pathname)
   unsigned int byte_position;
   unsigned int byte_sector;
   unsigned int byte_record_pos;
-  unsigned int empty_block = searchBitmap2(0);
-  unsigned int empty_sector = empty_block * 4;
+  unsigned int empty_block = (unsigned int)searchBitmap2(0);
+  // unsigned int empty_sector = empty_block * 4;
   unsigned int MFT_sec = 6; // stars with root register, which is the register 1
   struct t2fs_4tupla emptyTupla;
   struct t2fs_record record;

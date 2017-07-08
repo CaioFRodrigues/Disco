@@ -26,4 +26,6 @@ int get_MFTnumber_of_file_with_directory_MFT(char *dirname, MFT* directory, int 
 
 int get_MFTnumber_of_file_with_directory_number(char * filename, int directory_MFT, int mode);
 
+struct t2fs_4tupla find_last_tuple_MFT_register(unsigned int sector);
+
 #endif
