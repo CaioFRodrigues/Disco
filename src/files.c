@@ -27,8 +27,9 @@
 int read2(FILE2 handle, char * buffer, int size){
 
   // MFT* mft = read_MFT(opened_files[handle].first_MFT_tuple);
-  MFT* mft = read_MFT(12);
-  unsigned char sector_buffer[SECTOR_SIZE];
+  MFT* mft = read_MFT(12);  // For testing only
+  unsigned char sector_buffer[SECTOR_SIZE]; // Buffer used to read from sector
+  buffer[size] = '\0';
   while (mft != NULL && size > 0){
 
     int first_block = mft->current_MFT.logicalBlockNumber;
@@ -37,10 +38,11 @@ int read2(FILE2 handle, char * buffer, int size){
     int num_sectors = number_blocks * 4;
     int first_sector = first_block * 4;
 
-    int i =0,j=0;
+    int i =0,j=0, k=0;
     int first_byte = 3;
 
     int current_sector_pointer = 0;
+
     for (i=0; i<num_sectors; i++){
       current_sector_pointer = 0;
       read_sector(i+first_sector, sector_buffer);
@@ -52,20 +54,26 @@ int read2(FILE2 handle, char * buffer, int size){
       }
 
       if (size + current_sector_pointer > 256){ // If the amount of bytes to read is bigger than the amount of bytes in the sector
-        int k =0;
+        unsigned char temp_buffer[256-current_sector_pointer]; // Temporary buffer that stores bytes to be appended to buffer
+        k =0;
+        // Copy wanted bytes only
         for (j=current_sector_pointer; j<256; j++){
-          buffer[k] = sector_buffer[j];
+          temp_buffer[k] = sector_buffer[j];
           k++;
         }
-
+        buffer = append_buffers(buffer, temp_buffer);
         size -= (256 - current_sector_pointer);
       }
       else{ // If all bytes to be read are in this sector
-        int k =0;
+        unsigned char temp_buffer[size]; // Temporary buffer that stores bytes to be appended to buffer
+
+        k = 0;
+        // Copy wanted bytes only
         for (j=current_sector_pointer; j<size+current_sector_pointer; j++){
-          buffer[k] = sector_buffer[j];
+          temp_buffer[k] = sector_buffer[j];
           k++;
         }
+        buffer = append_buffers(buffer, temp_buffer);
         goto END;
 
       }
