@@ -59,8 +59,8 @@ void initialize_open_files();
 
 int first_free_file_position();
 
-int virtual_block_to_logical_block(DWORD current_pointer);
+int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list);
 
-int find_byte_position_in_logical_block(MFT* mft,int bytes)
+int find_byte_position_in_logical_block(MFT* mft,int bytes);
 
 #endif

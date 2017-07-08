@@ -11,3 +11,4 @@
 *
 *   Versão: 16.2
 */
+int read_bytes_from_sector(int sector, int num_bytes);

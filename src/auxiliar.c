@@ -77,7 +77,7 @@ int first_free_file_position(){
 //Ana
 int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list){
 
-  MFT_list* mft_list_copy = mft_list;  
+  MFT* mft_list_copy = mft_list;  
   DWORD currentVirtualBlockNumber, numberOfContiguosBlocks;
 
   while (mft_list_copy != NULL){
@@ -93,22 +93,24 @@ int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list){
       return mft_list_copy->current_MFT.logicalBlockNumber + (current_virtual_block - currentVirtualBlockNumber);
     }
   }
+
+  return -1;
 }
 
 // Ana
 //  Given a byte offset and an mft list, finds the byte offset relative to the 
-//logical block number in which the wanted byte will be
+//logical sector number in which the wanted byte will be
 //  Example: bytes = 500
 //  The 500th byte will be in the file's second virtualBlock, and it will
-//be the 12th byte from the beginning of the equivalent logicacl block
-int find_byte_position_in_logical_block(MFT* mft, int bytes){
+//be the 12th byte from the beginning of the equivalent logical sector
+int find_byte_position_in_logical_sector(MFT* mft, int bytes){
   
-  int num_sectors, num_blocks, current_logical_block_number, offsets_bytes;
+  int num_sectors, num_blocks, offsets_bytes;
 
   num_sectors = ceil(bytes/256);
   num_blocks = ceil(num_sectors/boot_block.MFTBlocksSize);
 
-  offsets_bytes = (num_blocks * num_sectors * 256) - bytes;
+  offsets_bytes = bytes - (num_blocks * num_sectors * 256);
   
   return offsets_bytes;
 
