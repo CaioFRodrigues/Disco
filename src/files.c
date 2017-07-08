@@ -13,5 +13,6 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 #include "../include/apidisk.h"
 #include "../include/files.h"

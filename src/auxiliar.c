@@ -13,33 +13,16 @@
 */
 #include <string.h>
 #include <stdio.h>
-#include "../include/apidisk.h"
-#include "../include/files.h"
-#include "../include/t2fs.h"
+
+
 #include "../include/auxiliar.h"
-
-/*
-TYPEVAL_REGULAR     0x01 -> 1
-TYPEVAL_DIRETORIO   0x02 -> 2
-*/
-#define SIZE_of_MFT_blocos 2048
-#define SIZE_of_MFT_REGISTER_bytes 512
-#define SIZE_of_MFT_REGISTER_sector 2
-
-#define ATRIB_TYPE 0
-#define VBN 4
-#define LBN 8
-#define CONTIG_BLOCK 12
-
-#define ID 0
-#define VERSION 4
-#define BLOCKSIZE 6
-#define MFTBLOCKSSIZE 8
-#define DISKSECTORSIZE 10
 
 struct t2fs_bootBlock boot_block;
 
 
+
+//Ana
+//Initializes the boot block with the info from the file
 int init(){
   int error;
   unsigned char buffer[SECTOR_SIZE];
@@ -52,64 +35,55 @@ int init(){
   for (i=ID; i<ID+4; i++){
       boot_block.id[i]=buffer[i];
   }
-  printf("%s\n", boot_block.id);
 
   boot_block.version = (buffer[VERSION+1] << 8) | buffer[VERSION];
-  printf("%#X\n",boot_block.version);
 
   boot_block.blockSize = (buffer[BLOCKSIZE+1] << 8) | buffer[BLOCKSIZE];
-  printf("%#X\n",boot_block.blockSize);
 
   boot_block.MFTBlocksSize = (buffer[MFTBLOCKSSIZE+1] << 8) | buffer[MFTBLOCKSSIZE];
-  printf("%#X\n",boot_block.MFTBlocksSize);
 
   boot_block.diskSectorSize = (buffer[DISKSECTORSIZE+3] << 16) | (buffer[DISKSECTORSIZE+2] << 12) | (buffer[DISKSECTORSIZE+1] << 8) | buffer[DISKSECTORSIZE];
-  printf("%#X\n",boot_block.diskSectorSize);
+
+  initialize_open_files();
 
   return 0;
 }
 
 
-unsigned int swap_4BYTE_endianess(unsigned int hex)
-{
-    unsigned int swapped = ((hex>>24)&0xff) | // move byte 3 to byte 0
-                           ((hex<<8)&0xff0000) | // move byte 1 to byte 2
-                           ((hex>>8)&0xff00) | // move byte 2 to byte 1
-                           ((hex<<24)&0xff000000); // byte 0 to byte 3
+//Caio
+//Initializes the array of opened files
+void initialize_open_files(){
 
-    return swapped;
+  for(int i = 0; i < MAX_OPENED_FILES; i++)
+    opened_files[i].is_valid = 0;
+
 }
 
-// if size = 2, convert 2 byte string to hex; 
-// if size = 4, convert 4 byte string to hex; 
-// else error
-unsigned int conv_string_to_hex(unsigned char *buffer, unsigned int position, int size)
-{
-        unsigned int hex;
-        if(size == 2){
-            hex = (buffer[position+1] << 8) | buffer[position];
 
-        }
-        else if(size == 4){
-            int aux = (buffer[position] << 24) |
-                        (buffer[position+1] << 16) |
-                        (buffer[position+2] << 8) |
-                        buffer[position+3];
+//Caio
+//Gets first possible position from opened_files
+//Returns -1 if 20 files have been opened
+int first_free_file_position(){
 
-            hex = swap_4BYTE_endianess(aux);
-        }
-        else
-            return -1;
+  for (int i = 0; i < MAX_OPENED_FILES; i++){
+    if (!opened_files[i].is_valid)
+      return i;
+  }
 
-        return hex;
+  return -1;
+
 }
 
+//Arateus
+// Find the first empty register in the MFT
+// return first empty register in the MFT
+// if error occurs or is full return -1
 int find_empty_MFT_reg()
 {
   unsigned char buffer[SECTOR_SIZE];
 
   int full_MFT = -1;
-  int registro = 4;
+  int registro = 4; // where first enabled MFT register starts (not protected by the system)
 
   unsigned int SIZE_of_MFT_setores = ((unsigned int)boot_block.blockSize) * ((unsigned int)boot_block.MFTBlocksSize);
 
@@ -143,4 +117,210 @@ int find_empty_MFT_reg()
   }
 
   return full_MFT;
+}
+
+//Arateus
+// unsigned int take_sector_from_empty_record_info(unsigned int record_position)
+// {
+//   // unsigned int sector = record_position / SIZE_of_RECORD;
+//   // return sector;
+//   return record_position / SIZE_of_RECORD;
+// }
+//Arateus
+// unsigned int take_record_position_in_dir(unsigned int record_position)
+// {
+//   return record_position % SIZE_of_RECORD;
+// }
+
+//Arateus
+// Take the right sector of the record position auxiliary function
+// example: if position is 320 (byte position), it will give you
+// the real sector of the record
+unsigned int take_sector_from_position(unsigned int record_position)
+{
+  return record_position / SECTOR_SIZE;
+}
+//Arateus
+// Take the right byte position to insert the record in the right sector
+// example: if position is 320 (byte position), it will result 64,
+// which is the right position in the sector to read or write the record
+unsigned int take_right_position(unsigned int record_position)
+{
+  return record_position % SECTOR_SIZE;
+}
+
+// Arateus
+// find the first empty record space in bytes at the BD (the name of this function is not quite good)
+// VBN: Virtual Block Number
+// return byte_position or -1 if something went wrong or is full
+unsigned int find_empty_record_info(unsigned int vbn)
+{
+  unsigned char buffer[SECTOR_SIZE];
+  unsigned int sector = (vbn * (unsigned int)boot_block.blockSize); // convert block into sector
+
+  BYTE type;
+
+  int error;
+  int cont = 0;
+
+  int k;
+  for(k = 0; k < 4; k++) // 'till the end of the block
+  {
+    error = read_sector(sector+k, buffer);
+    if(error)
+      return -1;
+
+    int b;
+    for (b = 0; b < SECTOR_SIZE; b = b + SIZE_of_RECORD)
+    {
+      type = buffer[b]; // taking type
+      if(type == 0x0){
+        cont = cont + b;
+        return cont; // return the position of the record in bytes
+      }
+      
+    }
+    cont = cont + SECTOR_SIZE;
+  }
+
+  return -1;
+}
+
+//Arateus
+// Write a record in a directory
+// given a sector and the byte position to insert the record, insert it in the desired position
+// return 1 if it worked and -1 if something went wrong
+int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record)
+{
+  // unsigned int byte_sector = take_sector_from_empty_record_info(byte_pos);
+  // unsigned int byte_record_pos = take_record_position_in_dir(byte_pos);
+
+  unsigned char buffer[SECTOR_SIZE];
+
+  int error = read_sector(sector, buffer);
+  if(error)
+    return -1;
+
+  // write TypeVal
+  buffer[byte_pos] = record.TypeVal;
+  // write name
+  int i;
+  for (i = 0; i < MAX_FILE_NAME_SIZE; i++)
+  {
+    buffer[byte_pos+RECORD_NAME+i] = record.name[i];
+  }
+
+  unsigned int aux;
+  // write in buffer the blocksFileSize
+  for (i = 0; i < 4; i++)
+  {
+    aux = (record.blocksFileSize >> 8*i)&0xff;
+    buffer[byte_pos+RECORD_BLOCK_FILESIZE+i] = aux;
+  }
+  //write in buffer for the bytesFileSize
+  for (i = 0; i < 4; i++)
+  {
+    aux = (record.bytesFileSize >> 8*i)&0xff;
+    buffer[byte_pos+RECORD_BYTES_FILESIZE+i] = aux;
+  }
+  // write for the MFTNumber
+  for (i = 0; i < 4; i++)
+  {
+    aux = (record.MFTNumber >> 8*i)&0xff;
+    buffer[byte_pos+RECORD_MFTNUMBER+i] = aux;
+  }
+
+  // write buffer in sector
+  int write_error = write_sector(sector, buffer);
+  if(write_error)
+    return -1;
+
+  return 1;
+}
+
+//Arateus
+// write tuple in the first position of the MFT register and set the secon tuple with 0x0000
+// given a sector and the desired tuple to insert
+// it will return 1 if it worked or -1 if something goes wrong
+int write_first_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t)
+{
+  unsigned char buffer[SECTOR_SIZE];
+  int error = read_sector(sector, buffer);
+  unsigned int zero = 0x00;
+  if(error)
+    return -1;
+
+  unsigned int aux;
+  // write AtributeType in the first tuple in the MFT
+  int i;
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.atributeType >> 8*i)&0xff;
+    buffer[TUPLE_ATRTYPE+i] = aux;
+  }
+  // write virtualBlockNumber
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.virtualBlockNumber >> 8*i)&0xff;
+    buffer[TUPLE_VBN+i] = aux;
+  }
+  // write logicalBlockNumber
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.logicalBlockNumber >> 8*i)&0xff;
+    buffer[TUPLE_LBN+i] = aux;
+  }
+  // write numberOfContiguousBocks
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.numberOfContiguosBlocks >> 8*i)&0xff;
+    buffer[TUPLE_NUMCONTIGBLOCK+i] = aux;
+  }
+  // write 0 in the second tuple
+  for (i = 0; i < 4; i++)
+  {
+    buffer[TUPLE_ATRTYPE+16+i] = zero;
+  }
+
+  int write_error = write_sector(sector, buffer);
+  if(write_error)
+    return -1;
+
+  return 1;
+}
+
+// Arateus
+// aux function for clear block
+// initializates alocated sector with 0x00
+// return 1 if work and -1 if had a write error
+int clear_sector(unsigned int sector){
+  unsigned char buffer[SECTOR_SIZE];
+  
+  int i;
+  for (i = 0; i < SECTOR_SIZE; i++)
+  {
+    buffer[i] = 0x0;
+  }
+
+  int write_error = write_sector(sector, buffer);
+  if(write_error)
+    return -1;
+
+  return 1;
+}
+
+//Arateus
+// clears the whole block
+// put 0x00 in every single byte in the block
+// return 1 if work and -1 if had a write error
+int clear_block(int init_sector){
+  // unsigned char buffer[SECTOR_SIZE];
+  int i;
+  for (i = 0; i < 4; i++)
+  {
+    if(clear_sector(init_sector+i) == -1)
+      return -1;
+  }
+
+  return 1;
 }
