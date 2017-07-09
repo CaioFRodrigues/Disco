@@ -11,5 +11,8 @@
 *
 *   Versão: 16.2
 */
+#include "../include/auxiliar.h"
+#include "../include/MFT.h"
+#include "../include/MFT_list.h"
 
 int clear_file(MFT* mft, int current_pointer);

@@ -34,6 +34,7 @@
 #define BOOT_BLOCK_SIZE 4
 #define ROOT_MFT 6
 
+
 extern struct t2fs_bootBlock boot_block;
 
 //File Descriptor - Holds the info of an opened file
@@ -59,8 +60,8 @@ void initialize_open_files();
 
 int first_free_file_position();
 
-int virtual_block_to_logical_block(DWORD current_pointer);
+int virtual_block_to_logical_block(DWORD current_pointer, MFT* mft_list);
 
-int find_byte_position_in_logical_block(MFT_list mft,int bytes)
+int find_byte_position_in_logical_block(MFT* mft,int bytes);
 
 #endif

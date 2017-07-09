@@ -58,7 +58,7 @@ int read_sector_as_MFT(int sector, MFT** list){
       //if current_MFT is valid, then the info must be saved
       case 1:
         //Puts the current info, its sector and the first byte where it is located from the sector
-        *list = push_MFT(*list, current_MFT, sector, current_position * MFT_4TUPLA_SIZE); 
+        *list = push_MFT(*list, current_MFT, sector, current_position); 
       break;
 
       //If attribute is 2, then the next sector is specified on virtualBlockNumber

@@ -2,6 +2,7 @@
 #define __MFTH__
 
 #include "../include/auxiliar.h"
+#include "../include/MFT_list.h"
 
 
 #define ATTRIBUTE_TYPE_START 0
