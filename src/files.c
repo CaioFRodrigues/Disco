@@ -68,14 +68,15 @@ int read2(FILE2 handle, char * buffer, int size){
             current_sector_pointer = first_byte;
           }
 
-          if (size + current_sector_pointer > 256){ // If the amount of bytes to read is bigger than the amount of bytes in the sector
-            unsigned char temp_buffer[256-current_sector_pointer]; // Temporary buffer that stores bytes to be appended to buffer
-            k =0;
+          if (size + current_sector_pointer >= 256){ // If the amount of bytes to read is bigger than the amount of bytes in the sector
+            unsigned char temp_buffer[256-current_sector_pointer+1]; // Temporary buffer that stores bytes to be appended to buffer
+            k = 0;
             // Copy wanted bytes only
             for (j=current_sector_pointer; j<256; j++){
               temp_buffer[k] = sector_buffer[j];
               k++;
             }
+            temp_buffer[k] = '\0';
             buffer = append_buffers(buffer, temp_buffer);
             size -= (256 - current_sector_pointer);
           }
@@ -88,6 +89,7 @@ int read2(FILE2 handle, char * buffer, int size){
               temp_buffer[k] = sector_buffer[j];
               k++;
             }
+            temp_buffer[k] = '\0';
             buffer = append_buffers(buffer, temp_buffer);
             goto END;
 
