@@ -30,6 +30,11 @@ int read2(FILE2 handle, char * buffer, int size){
   MFT* mft = read_MFT(12);  // For testing only
   unsigned char sector_buffer[SECTOR_SIZE]; // Buffer used to read from sector
   buffer[size] = '\0';
+  int first_byte = 0;
+
+  int pointer_block = first_byte/1024; // Virtual block in which first_byte is in
+  int pointer_sector = first_byte/256; //Logical sector in which first byte is in
+
   while (mft != NULL && size > 0){
 
     int first_block = mft->current_MFT.logicalBlockNumber;
@@ -39,44 +44,57 @@ int read2(FILE2 handle, char * buffer, int size){
     int first_sector = first_block * 4;
 
     int i =0,j=0, k=0;
-    int first_byte = 3;
 
     int current_sector_pointer = 0;
 
-    for (i=0; i<num_sectors; i++){
-      current_sector_pointer = 0;
-      read_sector(i+first_sector, sector_buffer);
+    int passed_blocks = mft->current_MFT.virtualBlockNumber;
+    int passed_sectors = 4 * passed_blocks;
+    if (pointer_block <= passed_blocks){
 
-      int sector_current = ceil(ceil(first_byte/256.0)/4.0)-1;
+      for (i=0; i<num_sectors; i++){
 
-      if (sector_current == i){
-        current_sector_pointer = first_byte;
-      }
+        current_sector_pointer = 0;
+        if (pointer_sector <= i+passed_sectors){
 
-      if (size + current_sector_pointer > 256){ // If the amount of bytes to read is bigger than the amount of bytes in the sector
-        unsigned char temp_buffer[256-current_sector_pointer]; // Temporary buffer that stores bytes to be appended to buffer
-        k =0;
-        // Copy wanted bytes only
-        for (j=current_sector_pointer; j<256; j++){
-          temp_buffer[k] = sector_buffer[j];
-          k++;
+          if (pointer_sector == i+passed_sectors){
+            current_sector_pointer = first_byte - (256*pointer_sector);
+          }
+
+          read_sector(i+first_sector, sector_buffer);
+
+          int sector_current = ceil(ceil(first_byte/256.0)/4.0)-1;
+
+          if (sector_current == i){
+            current_sector_pointer = first_byte;
+          }
+
+          if (size + current_sector_pointer > 256){ // If the amount of bytes to read is bigger than the amount of bytes in the sector
+            unsigned char temp_buffer[256-current_sector_pointer]; // Temporary buffer that stores bytes to be appended to buffer
+            k =0;
+            // Copy wanted bytes only
+            for (j=current_sector_pointer; j<256; j++){
+              temp_buffer[k] = sector_buffer[j];
+              k++;
+            }
+            buffer = append_buffers(buffer, temp_buffer);
+            size -= (256 - current_sector_pointer);
+          }
+          else{ // If all bytes to be read are in this sector
+            unsigned char temp_buffer[size]; // Temporary buffer that stores bytes to be appended to buffer
+
+            k = 0;
+            // Copy wanted bytes only
+            for (j=current_sector_pointer; j<size+current_sector_pointer; j++){
+              temp_buffer[k] = sector_buffer[j];
+              k++;
+            }
+            buffer = append_buffers(buffer, temp_buffer);
+            goto END;
+
+          }
         }
-        buffer = append_buffers(buffer, temp_buffer);
-        size -= (256 - current_sector_pointer);
       }
-      else{ // If all bytes to be read are in this sector
-        unsigned char temp_buffer[size]; // Temporary buffer that stores bytes to be appended to buffer
 
-        k = 0;
-        // Copy wanted bytes only
-        for (j=current_sector_pointer; j<size+current_sector_pointer; j++){
-          temp_buffer[k] = sector_buffer[j];
-          k++;
-        }
-        buffer = append_buffers(buffer, temp_buffer);
-        goto END;
-
-      }
     }
     mft = mft->next;
   }
