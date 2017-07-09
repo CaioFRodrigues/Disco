@@ -19,14 +19,6 @@ int main(int argc, char *argv[])
 	
 	write2(0, content, 1080);
 
-	int i =0;
-
-	for (i=2040; i<2060; i++){
-		printf("%d\n", getBitmap2(i));
-	}
-
-	printf("\n%d", searchBitmap2(0));
-
 	return 0;
 }
 

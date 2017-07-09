@@ -54,13 +54,14 @@ int write2(FILE2 handle, char* buffer, int size){
 
     // Writes buffer to file
     while (size > 0){
-        while (mft != NULL){    // Must be changed to mft-> next !=NULL
+        while (mft != NULL){    // Must be changed to mft-> next !=NULL when mft stores the tuple with attributeType = 0
             int first_block = mft->current_MFT.logicalBlockNumber;
             int number_blocks = mft->current_MFT.numberOfContiguosBlocks;
 
             int num_sectors = number_blocks * 4;
             int first_sector = first_block * 4;
 
+            // Loops through contiguos sectors from MFT
             for (j=0; j<num_sectors; j++){
 
                 current_sector_pointer = 0;
@@ -71,7 +72,7 @@ int write2(FILE2 handle, char* buffer, int size){
                     current_sector_pointer = first_byte;
                 }
 
-                if (size > (256-current_sector_pointer)){
+                if (size > (256-current_sector_pointer)){   // Fills entire sector
 
                     for (i=0; i<(256-current_sector_pointer); i++){
                         temp_buffer[i] = buffer[current_byte];
@@ -80,66 +81,75 @@ int write2(FILE2 handle, char* buffer, int size){
                     size -= (256-current_sector_pointer);
                     insert_in_sector(j+first_sector, temp_buffer, current_sector_pointer, (256-current_sector_pointer));
                 }
-                else{
+                else{   // Writes last bytes into sector
                     for (i=0; i<size; i++){
                         temp_buffer[i] = buffer[current_byte];
                         current_byte++;
                     }
                     insert_in_sector(j+first_sector, temp_buffer, current_sector_pointer, size);
-                    goto END;
+                    return 0;
                 }
             }
-            last_mft = mft;
+            last_mft = mft; // Stores previous mft tuple for when the loop ends
             mft = mft->next;
         }
 
-        // // If tuples are finished, and there's still content to be written in the file
-        // // The rest of the blocks needed will be allocated
-        // if (mft == NULL){
-        //     int blocks_needed = ceil(size/1024.0);
-        //     int n = 0;
-        //     for (n=0; n < blocks_needed; n++){
 
-        //         int new_block = searchBitmap2(0);
-
-        //         if (new_block != 0){
-        //             printf("WHY");
-        //             return -1;
-        //         }
-
-        //         if (setBitmap2(new_block, 1) != 0){
-        //             return -1;
-        //         }
+        /*
+        *   BASIC LOGIC FOR THIS PART
+        *       Allocates new block
+        *           Checks if the block is contiguos with the blocks from the last mft tuple from the file
+        *               If it is, just update teh mft tuple
+        *           If it isn't, create new tuple and write it to block
+        *
+        *
+        */
 
 
-        //         if (new_block == last_mft->current_MFT.logicalBlockNumber + last_mft->current_MFT.numberOfContiguosBlocks + 1){
-        //             // Block contiguous to the ones in the last MFT
-        //             last_mft->current_MFT.numberOfContiguosBlocks++;
-        //         }
-        //         else{
-        //             last_mft->current_MFT.atributeType = -1;
-        //             // Create new MFT tuple
-        //             struct t2fs_4tupla new_tuple;
-        //             new_tuple.atributeType = 2;
-        //             new_tuple.virtualBlockNumber = -1;  // Needs to point to the next one
-        //             new_tuple.logicalBlockNumber = new_block;
-        //             new_tuple.numberOfContiguosBlocks = 1;
-        //             // mft->current_MFT.virtualBlockNumber = Needs to point to the new_tuple logical block
-        //             if (last_mft->offset == 15){
-        //                 // Needs new sector
-        //                 mft = push_MFT(mft, new_tuple, last_mft->sector+1, 0);
-        //             }
-        //             else{
-        //                 mft = push_MFT(mft, new_tuple, last_mft->sector, last_mft->offset+1);
-        //             }
-                        
-        //         }
-        //     }
-        // }
+        int blocks_needed = ceil(size/1024.0);
+        int n = 0;
+        int new_block = 0;
+
+        for (n=0; n < blocks_needed; n++){
+
+            new_block = searchBitmap2(0);
+
+            if (new_block < 0){
+
+                return -1;
+            }
+
+            if (setBitmap2(new_block, 1) != 0){
+                return -1;
+            }
+        }
+
+        if (new_block == last_mft->current_MFT.logicalBlockNumber + last_mft->current_MFT.numberOfContiguosBlocks + 1){
+            // Block contiguos to the ones in the last MFT
+            last_mft->current_MFT.numberOfContiguosBlocks++;
+        }
+        else{
+            last_mft->current_MFT.atributeType = -1;    // Invalidates what used to be last tuple for file (attributeType = 0)
+
+            // Create new MFT tuple
+            struct t2fs_4tupla new_tuple;
+            new_tuple.atributeType = 2;
+            new_tuple.virtualBlockNumber = -1;  // Needs to point to the next one, probably updated later
+            new_tuple.logicalBlockNumber = new_block;
+            new_tuple.numberOfContiguosBlocks = 1;
+
+            // mft->current_MFT.virtualBlockNumber = Needs to point to the new_tuple logical block
+            if (last_mft->offset == 15){
+                // Needs new sector
+                mft = push_MFT(mft, new_tuple, last_mft->sector+1, 0);
+            }
+            else{
+                mft = push_MFT(mft, new_tuple, last_mft->sector, last_mft->offset+1);
+            }
+            last_mft = mft;
+                
+        }
     }
-
-END:
-    return 0;
 }
 
 // Ana
