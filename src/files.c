@@ -41,6 +41,15 @@ int truncate2 (FILE2 handle){
 
   int current_pointer = opened_files[handle].current_pointer;
   MFT* mft = read_MFT(opened_files[handle].first_MFT_tuple);
+
+    // Initialize it with path_return_record
+  struct t2fs_record file_record;
+
+  file_record.blocksFileSize -= ceil(current_pointer/1024.0);
+  file_record.bytesFileSize = current_pointer + 1 ;
+
+  // Write record to disk
+
   clear_file(mft, current_pointer);
   opened_files[handle].fileSizeBytes = current_pointer + 1;
 }
@@ -55,24 +64,22 @@ int delete2 (char *filename){
   *       If it is, in the end of the process its file descriptor must be marked as invalid
   */
 
+  // Initialize it with path_return_record
+  struct t2fs_record file_record;
+
+  file_record.TypeVal = 0;
+
+  // Write record to disk
+  
   MFT* mft; // Mock structure
   clear_file(mft, 0);
 }
 
 // Ana
 int clear_file(MFT* mft, int current_pointer){
-  
-  /*
-  * TODO:
-  *   Make sure to save the changes in the file register and the mft in the disk, not only in memory
-  */
-
-  struct t2fs_record file_register; // Mock structure
 
   int pointer_block = current_pointer/1024;
-  // Update file size in bytes and blocks
-  // file_register.bytesFileSize = current_pointer + 1;
-  // file_register.blocksFileSize = current_virtual_block + 1;
+
 
   int i =0;
   while (mft != NULL){

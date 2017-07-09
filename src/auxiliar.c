@@ -113,3 +113,85 @@ int find_byte_position_in_logical_block(MFT* mft, int bytes){
   return offsets_bytes;
 
 }
+
+
+//funcao recebe um path e retorna um record com o arquivo ou dir
+struct t2fs_record path_return_record(char* path)
+{
+  char *token, *filenamecopy;
+  unsigned int MFT_sec = 6; // stars with root register, which is the register 1
+  unsigned char bufferMFT[SECTOR_SIZE];
+  unsigned char bufferBD[SECTOR_SIZE];
+  struct t2fs_4tupla t;
+  struct t2fs_record record;
+  int error;
+  unsigned int s;
+
+  filenamecopy = strdup(path);
+  
+  token = strtok(filenamecopy, "/");
+  
+
+  //Initializes the root MFT
+  int current_dir_sector = ROOT_MFT;
+  
+  //isolated_filename is the path without the subdirectories it is in
+  char *isolated_filename = (strrchr(path, '/'));
+  isolated_filename = isolated_filename + 1;
+  
+  //Goes through the subdirectories
+  while(strcmp(token,isolated_filename) != 0){
+    MFT_sec = get_MFTnumber_of_file_with_directory_number(token, current_dir_sector, SEARCHING_DIRECTORY);
+  }
+
+  // search at MFT for desired info
+  int i;
+  int j;
+  int k;
+  int p;
+  int r;
+  for(i = 0; i < 2; i++)
+  {// going through sectors
+    error = read_sector(MFT_sec + i, bufferMFT); // reading MFT register
+    if(error)
+      break;
+    for (j = 0; j < 16; j++)
+    { // going tuple by tuple in the sector
+      t = fill_MFT(bufferMFT, j);
+
+      if(t.atributeType == 0 || t.atributeType == -1){ // if end or non ecziste return error
+        // record = (struct t2fs_record)malloc(sizeof(struct t2fs_record));
+        return record;
+      }
+      else if(t.atributeType == 2){ // if reached the end of the MFT register (the last tuple) go to the next register
+        i = 0;
+        MFT_sec = t.virtualBlockNumber * 2 + 4; // recebe o registro e o converte pro setor desse registro
+      }
+        
+      else{
+        for(k = 0; k < t.numberOfContiguosBlocks; k++)
+        { // reading BD
+          s = (unsigned int)((t.logicalBlockNumber + k) * 4); // find the sector of the respective blocks
+          for(p = 0; p<4; p++) // read the whole block
+          {
+            error = read_sector(s + p, bufferBD); // reading MFT register
+            if(error){
+              // record = (struct t2fs_record)malloc(sizeof(struct t2fs_record));
+              return record;
+            }
+            for (r = 0; r < 4; r++)
+            { //each sector has max 4 records
+              record = fill_directory(bufferBD, r);
+              if(strcmp(isolated_filename, record.name)==0)
+                return record;
+            }
+          }
+        }
+      }
+
+    }
+  }
+
+  // record = (struct t2fs_record)malloc(sizeof(struct t2fs_record));
+  return record;
+}
