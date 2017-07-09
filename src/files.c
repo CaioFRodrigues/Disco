@@ -32,6 +32,12 @@ int read2(FILE2 handle, char * buffer, int size){
   buffer[size] = '\0';
   int first_byte = 0;
 
+  int copy_size = size;
+
+  /*
+    Treat case in which size + current_pointer > file_size
+  */
+
   int pointer_block = first_byte/1024; // Virtual block in which first_byte is in
   int pointer_sector = first_byte/256; //Logical sector in which first byte is in
 
@@ -91,8 +97,7 @@ int read2(FILE2 handle, char * buffer, int size){
             }
             temp_buffer[k] = '\0';
             buffer = append_buffers(buffer, temp_buffer);
-            goto END;
-
+            return copy_size;
           }
         }
       }
@@ -100,10 +105,10 @@ int read2(FILE2 handle, char * buffer, int size){
     }
     mft = mft->next;
   }
-  END:
-  // printf("%s\n", temp_buffer);
 
-  return 0;
+  opened_files[handle].current_pointer = first_byte + size + 1; // Moves current_pointer to the next byte from where reading was finished
+
+  return -1;
 }
 
 // Ana
