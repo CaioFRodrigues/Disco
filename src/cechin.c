@@ -24,31 +24,39 @@ int main(int argc, char *argv[])
 
 	init();
 
-	// int position;
-	// position = searchBitmap2(0);
+	int position;
+	position = searchBitmap2(0);
 
-	// printf("Primeiro bloco livre: %d\n", position);
+	printf("Primeiro bloco livre: %d\n", position);
 
-	// int blockNumber = 4;
-	// printf("Printando %d bitmap:\n", blockNumber);
+	int blockNumber = 4;
+	printf("Printando %d bitmap:\n", blockNumber);
 
-	// printf("%d\n", getBitmap2(blockNumber));
+	printf("%d\n", getBitmap2(blockNumber));
 
-	// printf("%s\n", boot_block.id);
+	printf("%s\n", boot_block.id);
 
-	// printf("%#X\n",boot_block.version);
+	printf("%#X\n",boot_block.version);
 
-	// printf("%#X\n",boot_block.blockSize);
+	printf("%#X\n",boot_block.blockSize);
 
-	// printf("%#X\n",boot_block.MFTBlocksSize);
+	printf("%#X\n",boot_block.MFTBlocksSize);
 
-	// printf("%#X\n",boot_block.diskSectorSize);
+	printf("%#X\n",boot_block.diskSectorSize);
 
-	// int first_empty_reg_MFT = find_empty_MFT_reg();
+	int first_empty_reg_MFT = find_empty_MFT_reg();
 
-	// printf("First empty MFT register: %d\n", first_empty_reg_MFT);
+	printf("First empty MFT register: %d\n", first_empty_reg_MFT);
 
-	// printf("First ROOT byte: %d\n", find_empty_record_info(0x802));
+	printf("First ROOT byte: %d\n", find_empty_record_info(0x802));
+
+	struct t2fs_record r = path_return_record("/file2");
+
+	printf("Record TypeVal: %d\n", (int)r.TypeVal);
+	printf("Record Name: %s\n", r.name);
+	printf("Record blocksFileSize: %d\n", r.blocksFileSize);
+	printf("Record bytesFileSize: %d\n", r.bytesFileSize);
+	printf("Record MFTNumber: %d\n", r.MFTNumber);
 
 	// FILE2 batata = create2("/file3");
 

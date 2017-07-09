@@ -99,5 +99,7 @@ int clear_sector(unsigned int sector);
 
 int clear_block(int init_sector);
 
+struct t2fs_record path_return_record(char* path);
+
 
 #endif

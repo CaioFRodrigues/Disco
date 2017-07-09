@@ -62,6 +62,7 @@ FILE2 open2 (char *filename){
 
 }
 
+
 // Arateus
 FILE2 create2(char *filename)
 {
@@ -121,9 +122,28 @@ FILE2 create2(char *filename)
   // jogar isso pra opened files (eu acho)
   if(depht == 0) // if it is in ROOT
   {
-  	empty_MFTRegister = find_empty_MFT_reg();
   	byte_position = find_empty_record_info(0x802);
-	byte_sector = take_sector_from_position(byte_position);
+    // if(byte_position == -1) // if didn't find and empty position (dir is full)
+    // {
+    //   // alocar uma nova tupla
+    //   if(getBitmap2(0x802 + 0x01) == 1) // if is alocated
+    //   {
+    //     // go to MFT register
+    //     struct t2fs_4tupla newTuple;
+    //     struct t2fs_4tupla lastT = find_last_tuple_MFT_register(ROOT_BD_SECTOR);
+
+    //     newTuple.atributeType = 1;
+    //     newTuple.logicalBlockNumber = (unsigned int)searchBitmap2(0);
+    //     setBitmap2(newTuple.logicalBlockNumber, 1);
+    //     newTuple.virtualBlockNumber = lastT.numberOfContiguosBlocks + lastT.virtualBlockNumber;
+    //     newTuple.numberOfContiguosBlocks = 1;
+
+
+    //   }
+
+    // }
+    empty_MFTRegister = find_empty_MFT_reg();
+	  byte_sector = take_sector_from_position(byte_position);
   	byte_record_pos = take_right_position(byte_position);
 
   	record.MFTNumber = empty_MFTRegister;

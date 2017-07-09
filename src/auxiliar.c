@@ -103,7 +103,7 @@ int find_empty_MFT_reg()
 
     DWORD realAtrType = conv_string_to_hex(buffer, ATRIB_TYPE, 4);
 
-    printf("atrType: %#X\n", realAtrType); 
+    // printf("atrType: %#X\n", realAtrType); 
 
     if((int)realAtrType != -1){
       registro++;
@@ -153,10 +153,10 @@ unsigned int take_right_position(unsigned int record_position)
 // find the first empty record space in bytes at the BD (the name of this function is not quite good)
 // VBN: Virtual Block Number
 // return byte_position or -1 if something went wrong or is full
-unsigned int find_empty_record_info(unsigned int vbn)
+unsigned int find_empty_record_info(unsigned int lbn)
 {
   unsigned char buffer[SECTOR_SIZE];
-  unsigned int sector = (vbn * (unsigned int)boot_block.blockSize); // convert block into sector
+  unsigned int sector = (lbn * (unsigned int)boot_block.blockSize); // convert block into sector
 
   BYTE type;
 
@@ -270,7 +270,7 @@ int write_first_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tup
     aux = (t.logicalBlockNumber >> 8*i)&0xff;
     buffer[TUPLE_LBN+i] = aux;
   }
-  // write numberOfContiguousBocks
+  // write numberOfContiguousBlocks
   for (i = 0; i < 4; i++)
   {
     aux = (t.numberOfContiguosBlocks >> 8*i)&0xff;
@@ -280,6 +280,60 @@ int write_first_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tup
   for (i = 0; i < 4; i++)
   {
     buffer[TUPLE_ATRTYPE+16+i] = zero;
+  }
+
+  int write_error = write_sector(sector, buffer);
+  if(write_error)
+    return -1;
+
+  return 1;
+}
+
+int write_on_last_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t, unsigned int tupleNum)
+{
+  unsigned char buffer[SECTOR_SIZE];
+  int error = read_sector(sector, buffer);
+  unsigned int zero = 0x00;
+  unsigned int offset = tupleNum * 16;
+
+  if(error)
+    return -1;
+
+  if(TUPLE_ATRTYPE+16+i+offset > SECTOR_SIZE){
+    // create new tuple and ask for new register
+    
+  }
+
+  unsigned int aux;
+  // write AtributeType in the first tuple in the MFT
+  int i;
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.atributeType >> 8*i)&0xff;
+    buffer[TUPLE_ATRTYPE+i+offset] = aux;
+  }
+  // write virtualBlockNumber
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.virtualBlockNumber >> 8*i)&0xff;
+    buffer[TUPLE_VBN+i+offset] = aux;
+  }
+  // write logicalBlockNumber
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.logicalBlockNumber >> 8*i)&0xff;
+    buffer[TUPLE_LBN+i+offset] = aux;
+  }
+  // write numberOfContiguousBlocks
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.numberOfContiguosBlocks >> 8*i)&0xff;
+    buffer[TUPLE_NUMCONTIGBLOCK+i+offset] = aux;
+  }
+  // write 0 in the second tuple
+  for (i = 0; i < 4; i++)
+  {
+    buffer[TUPLE_ATRTYPE+16+i+offset] = zero;
   }
 
   int write_error = write_sector(sector, buffer);
@@ -324,3 +378,92 @@ int clear_block(int init_sector){
 
   return 1;
 }
+
+//read dir
+
+// percorrer a MFT
+
+
+//funcao recebe um path e retorna um record com o arquivo ou dir
+struct t2fs_record path_return_record(char* path)
+{
+  char *token, *filenamecopy;
+  unsigned int MFT_sec = 6; // stars with root register, which is the register 1
+  unsigned char bufferMFT[SECTOR_SIZE];
+  unsigned char bufferBD[SECTOR_SIZE];
+  struct t2fs_4tupla t;
+  struct t2fs_record record;
+  int error;
+  unsigned int s;
+
+  filenamecopy = strdup(path);
+  
+  token = strtok(filenamecopy, "/");
+  
+
+  //Initializes the root MFT
+  int current_dir_sector = ROOT_MFT;
+  
+  //isolated_filename is the path without the subdirectories it is in
+  char *isolated_filename = (strrchr(path, '/'));
+  isolated_filename = isolated_filename + 1;
+  
+  //Goes through the subdirectories
+  while(strcmp(token,isolated_filename) != 0){
+    MFT_sec = get_MFTnumber_of_file_with_directory_number(token, current_dir_sector, SEARCHING_DIRECTORY);
+  }
+
+  // search at MFT for desired info
+  int i;
+  int j;
+  int k;
+  int p;
+  int r;
+  for(i = 0; i < 2; i++)
+  {// going through sectors
+    error = read_sector(MFT_sec + i, bufferMFT); // reading MFT register
+    if(error)
+      break;
+    for (j = 0; j < 16; j++)
+    { // going tuple by tuple in the sector
+      t = fill_MFT(bufferMFT, j);
+
+      if(t.atributeType == 0 || t.atributeType == -1){ // if end or non ecziste return error
+        // record = (struct t2fs_record)malloc(sizeof(struct t2fs_record));
+        return record;
+      }
+      else if(t.atributeType == 2){ // if reached the end of the MFT register (the last tuple) go to the next register
+        i = 0;
+        MFT_sec = t.virtualBlockNumber * 2 + 4; // recebe o registro e o converte pro setor desse registro
+      }
+        
+      else{
+        for(k = 0; k < t.numberOfContiguosBlocks; k++)
+        { // reading BD
+          s = (unsigned int)((t.logicalBlockNumber + k) * 4); // find the sector of the respective blocks
+          for(p = 0; p<4; p++) // read the whole block
+          {
+            error = read_sector(s + p, bufferBD); // reading MFT register
+            if(error){
+              // record = (struct t2fs_record)malloc(sizeof(struct t2fs_record));
+              return record;
+            }
+            for (r = 0; r < 4; r++)
+            { //each sector has max 4 records
+              record = fill_directory(bufferBD, r);
+              if(strcmp(isolated_filename, record.name)==0)
+                return record;
+            }
+          }
+        }
+      }
+
+    }
+  }
+
+  // record = (struct t2fs_record)malloc(sizeof(struct t2fs_record));
+  return record;
+}
+
+// funcao q vai receber um nome e um diretorio sector e acha o record com nome correspondente
+// fill_derectory ^^^
