@@ -24,7 +24,7 @@
 
 //Ana
 int close2(FILE2 handle){
-    
+
     if (opened_files[handle].is_valid == 1 && handle < 20){
         opened_files[handle].is_valid = 0;
         return 0;
@@ -35,8 +35,8 @@ int close2(FILE2 handle){
 //Ana
 int closedir2(DIR2 handle){
 
-    if (opened_folders[handle].is_valid == 1 /*&& handle < num_open_dirs*/){
-        opened_folders[handle].is_valid = 0;
+    if (opened_directories[handle].is_valid == 1 && handle < number_dir_handles){
+        opened_directories[handle].is_valid = 0;
         return 0;
     }
     return -1;

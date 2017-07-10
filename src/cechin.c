@@ -14,10 +14,5 @@
 
 int main(int argc, char *argv[])
 {	
-	char* buffer;
-	buffer = malloc(sizeof(unsigned char)*(4066));
 
-	read2(0, buffer, 4066);
-	printf("%s\n", buffer);
-    return 0;
 }
