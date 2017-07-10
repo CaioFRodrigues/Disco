@@ -49,6 +49,9 @@ typedef struct file_descriptor {
 // Mock structures
 int number_files_open;
 struct file_descriptor opened_files[MAX_OPENED_FILES];
+int number_dir_handles;
+FILE_DESCRIPTOR * opened_directories;
+
 
 //Ana
 //Initializes the boot block with the needed information
@@ -56,8 +59,15 @@ int init();
 
 void initialize_open_files();
 
+void initialize_open_directories();
+
 int first_free_file_position();
 
+int first_free_dir_position();
+
+
 DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT* mft_list);
+
+
 
 #endif
