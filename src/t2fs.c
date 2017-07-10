@@ -124,24 +124,3 @@ int read2(FILE2 handle, char * buffer, int size){
   // Function couldn't read everything
   return -1;
 }
-
-// Ana
-/* Given the starting and ending byte, the amount of bytes to copy, the source and the destination buffer,
-copies the specific bytes in the specific amounts to the destination buffer
-*/
-void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* source, char* destination){
-
-  unsigned char temp_buffer[bytes_to_copy+1]; // Temporary buffer that stores bytes to be appended to buffer
-
-  int k = 0, j = 0;
-
-  // Copy wanted bytes only
-  for (j=starting_byte; j<ending_byte; j++){
-    temp_buffer[k] = source[j];
-    k++;
-  }
-  temp_buffer[k] = '\0';
-
-  destination = append_buffers(destination, temp_buffer);
-
-}

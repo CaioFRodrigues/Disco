@@ -65,4 +65,6 @@ int find_byte_position_in_logical_block(MFT* mft,int bytes);
 
 char* append_buffers( char* final_buffer, char* temp_buffer );
 
+void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* source, char* destination);
+
 #endif
