@@ -23,6 +23,26 @@
 #include "../include/MFT_list.h"
 
 //Ana
+int close2(FILE2 handle){
+    
+    if (opened_files[handle].is_valid == 1 && handle < 20){
+        opened_files[handle].is_valid = 0;
+        return 0;
+    }
+    return -1;
+}
+
+//Ana
+int closedir2(DIR2 handle){
+
+    if (opened_folders[handle].is_valid == 1 /*&& handle < num_open_dirs*/){
+        opened_folders[handle].is_valid = 0;
+        return 0;
+    }
+    return -1;
+}
+
+//Ana
 int seek2(FILE2 handle, DWORD offset){
 
   // Error cases
