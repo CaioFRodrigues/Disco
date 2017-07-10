@@ -13,6 +13,7 @@
 */
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 
 #include "../include/auxiliar.h"
@@ -74,9 +75,9 @@ int first_free_file_position(){
 }
 
 //Ana
-DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT_list* mft_list){
+int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list){
 
-  MFT_list* mft_list_copy = mft_list;  
+  MFT* mft_list_copy = mft_list;  
   DWORD currentVirtualBlockNumber, numberOfContiguosBlocks;
 
   while (mft_list_copy != NULL){
@@ -84,13 +85,43 @@ DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT_list* mft_list){
     currentVirtualBlockNumber = mft_list_copy->current_MFT.virtualBlockNumber;
     numberOfContiguosBlocks = mft_list_copy->current_MFT.numberOfContiguosBlocks;
     
-    if (numberOfContiguosBlocks + currentVirtualBlockNumber - 1 < current_pointer){ // If current_pointer is not mapped in this tuple
+    if (numberOfContiguosBlocks + currentVirtualBlockNumber - 1 < current_virtual_block){ // If current_virtual_block is not mapped in this tuple
       mft_list_copy = mft_list_copy->next;
     }
     else{
-      // currentVirtualBlockNumber maps to logicalBlockNumber, current_pointer = logicalBlockNumber + offset
-      return mft_list_copy->current_MFT.logicalBlockNumber + (current_pointer - currentVirtualBlockNumber);
+      // currentVirtualBlockNumber maps to logicalBlockNumber, current_virtual_block = logicalBlockNumber + offset
+      return mft_list_copy->current_MFT.logicalBlockNumber + (current_virtual_block - currentVirtualBlockNumber);
     }
   }
+
+  return -1;
 }
 
+// Ana
+//  Given a byte offset and an mft list, finds the byte offset relative to the 
+//logical sector number in which the wanted byte will be
+//  Example: bytes = 500
+//  The 500th byte will be in the file's second virtualBlock, and it will
+//be the 12th byte from the beginning of the equivalent logical sector
+int find_byte_position_in_logical_sector(MFT* mft, int bytes){
+  
+  int num_sectors, num_blocks, offsets_bytes;
+
+  num_sectors = ceil(bytes/256);
+  num_blocks = ceil(num_sectors/boot_block.MFTBlocksSize);
+
+  offsets_bytes = bytes - (num_blocks * num_sectors * 256);
+  
+  return offsets_bytes;
+
+}
+
+// Ana
+char* append_buffers( char* final_buffer, char* temp_buffer ){
+  while (*final_buffer)
+    final_buffer++;
+  
+  while (*final_buffer++ = *temp_buffer++);
+
+  return --final_buffer;
+}
