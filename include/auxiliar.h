@@ -51,11 +51,17 @@ typedef struct file_descriptor {
 int number_files_open;
 struct file_descriptor opened_files[MAX_OPENED_FILES];
 
+int number_dir_handles;
+FILE_DESCRIPTOR * opened_directories;
+
+
 //Ana
 //Initializes the boot block with the needed information
 int init();
 
 void initialize_open_files();
+
+void initialize_open_directories();
 
 int first_free_file_position();
 
@@ -66,5 +72,11 @@ int find_byte_position_in_logical_block(MFT* mft,int bytes);
 char* append_buffers( char* final_buffer, char* temp_buffer );
 
 void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* source, char* destination);
+
+int first_free_dir_position();
+
+DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT* mft_list);
+
+
 
 #endif

@@ -47,6 +47,8 @@ int init(){
 
   initialize_open_files();
 
+  initialize_open_directories(); 
+
   return 0;
 }
 
@@ -59,6 +61,10 @@ void initialize_open_files(){
 
 }
 
+void initialize_open_directories(){
+  number_dir_handles = 0;
+  opened_directories = NULL;
+}
 
 //Caio
 //Gets first possible position from opened_files
@@ -74,8 +80,33 @@ int first_free_file_position(){
 
 }
 
+//Caio
+//Gets first possible position from opened_directories
+//Returns -1 if it failed
+int first_free_dir_position(){
+
+  //If there is no current directory, return 0 and allocates space
+  if (opened_directories == NULL){
+    opened_directories = malloc(sizeof(FILE_DESCRIPTOR));
+    return 0;
+  }
+  else{
+    //Goes through the current handles, and tries to find a valid one
+    for (int i = 0;i < number_dir_handles; i++){
+      if (opened_directories[i].is_valid)
+        return i;
+    }
+
+    //If there is none, it is needed to reallocate the size of opened_directories and return that new_position
+    opened_directories = realloc(opened_directories, sizeof(opened_directories) + sizeof(FILE_DESCRIPTOR));
+    number_dir_handles++;
+    return number_dir_handles;
+  }
+  return -1;
+}
+
 //Ana
-int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list){
+DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT* mft_list){
 
   MFT* mft_list_copy = mft_list;  
   DWORD currentVirtualBlockNumber, numberOfContiguosBlocks;

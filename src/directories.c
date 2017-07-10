@@ -90,3 +90,45 @@ struct t2fs_record fill_directory(unsigned char* buffer, int directory_number){
   return directory;
 }
 
+
+//Given a filename, returns THE SECTOR OF THE MFT it belongs
+//if the file was not found, returns -1
+int get_parent_dir_MFT_sector(char *filename){
+	FILE2 open2 (char *filename);
+ 	
+	char *token, *filenamecopy;
+
+	filenamecopy = strdup(filename);
+	
+	token = strtok(filenamecopy, "/");
+	
+
+	//Initializes the root MFT
+	int current_dir_sector = ROOT_MFT;
+	
+	//isolated_filename is the filename without the subdirectories it is in
+	char *isolated_filename = (strrchr(filename, '/'));
+	isolated_filename = isolated_filename + 1;
+	
+	//Goes through the subdirectories
+	while(strcmp(token,isolated_filename) != 0){
+		
+		current_dir_sector = get_MFTnumber_of_file_with_directory_number(token, current_dir_sector, SEARCHING_DIRECTORY);
+
+		//If the file is not on the directory		
+		if (current_dir_sector == -1)
+			return -1;
+
+		//Recalculates the current_dir_sector
+		current_dir_sector = (current_dir_sector * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
+
+	}
+
+	free(filenamecopy);
+
+	return current_dir_sector;
+
+
+
+}
+
