@@ -75,9 +75,9 @@ DIR2 opendir(char *filename){
 	//Declares the file as valid
 	file_descriptor.is_valid = 1;
 	
+	int index = first_free_dir_position();
 
-
-	opened_files[first_free_dir_position()] = file_descriptor;
+	opened_directories[index] = file_descriptor;
 
 	return 0;
 

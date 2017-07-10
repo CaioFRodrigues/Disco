@@ -46,7 +46,7 @@ int init(){
 
   initialize_open_files();
 
-  void initialize_open_directories(); 
+  initialize_open_directories(); 
 
   return 0;
 }
@@ -83,6 +83,7 @@ int first_free_file_position(){
 //Gets first possible position from opened_directories
 //Returns -1 if it failed
 int first_free_dir_position(){
+
   //If there is no current directory, return 0 and allocates space
   if (opened_directories == NULL){
     opened_directories = malloc(sizeof(FILE_DESCRIPTOR));

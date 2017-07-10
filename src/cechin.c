@@ -111,8 +111,15 @@ int main(int argc, char *argv[])
      printf ("%s", opened_files[0].file_path);
 
 
-	
-	
+	FILE_DESCRIPTOR file_descriptor;
+
+	file_descriptor.is_valid = 1;
+	int pos = first_free_dir_position();
+
+	opened_directories[pos] = file_descriptor;
+	opened_directories[first_free_dir_position()] = file_descriptor;
+
+	printf ("%d\n", opened_directories[1].is_valid);
 
     return 0;
 

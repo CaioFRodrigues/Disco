@@ -49,6 +49,7 @@ typedef struct file_descriptor {
 // Mock structures
 int number_files_open;
 struct file_descriptor opened_files[MAX_OPENED_FILES];
+
 int number_dir_handles;
 FILE_DESCRIPTOR * opened_directories;
 
