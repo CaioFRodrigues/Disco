@@ -26,116 +26,101 @@
 // Ana
 int read2(FILE2 handle, char * buffer, int size){
 
+  int i =0,j=0, k=0;
+
   // MFT* mft = read_MFT(opened_files[handle].first_MFT_tuple);
   MFT* mft = read_MFT(12);  // For testing only
+
   unsigned char sector_buffer[SECTOR_SIZE]; // Buffer used to read from sector
   buffer[size] = '\0';
-  int first_byte = 0;
 
-  int copy_size = size;
+  // int current_pointer = opened_files[handle].current_pointer
+  int current_pointer = 0;   // For testing only
 
-  /*
-    Treat case in which size + current_pointer > file_size
-  */
+  int bytes_left_to_copy = size;
 
-  int pointer_block = first_byte/1024; // Virtual block in which first_byte is in
-  int pointer_sector = first_byte/256; //Logical sector in which first byte is in
+  //   If the number of bytes to be read is larger than the amount of bytes 
+  // from the current_pointer to the end of file, make sure that function reads only till end of file
+  if (size + current_pointer > opened_files[handle].fileSizeBytes)
+    size = opened_files[handle].fileSizeBytes - current_pointer;
 
-  while (mft != NULL && size > 0){
+  int current_pointer_block = current_pointer/1024; // Virtual block in which current_pointer is in
+  int current_pointer_sector = current_pointer/256; //Logical sector in which first byte is in
 
-    int first_block = mft->current_MFT.logicalBlockNumber;
-    int number_blocks = mft->current_MFT.numberOfContiguosBlocks;
+  // Reads from file until there are no more mft tuples or there are no more bytes left to copy
+  while (mft != NULL && bytes_left_to_copy > 0){
 
-    int num_sectors = number_blocks * 4;
-    int first_sector = first_block * 4;
+    // MFT info for blocks and sectors to be read
+    int mft_first_logical_block = mft->current_MFT.logicalBlockNumber;
+    int mft_number_blocks = mft->current_MFT.numberOfContiguosBlocks;
+    int mft_number_sectors = mft_number_blocks * 4;
+    int mft_first_sector = mft_first_logical_block * 4;
 
-    int i =0,j=0, k=0;
+    int sector_starting_byte = 0; // Byte in which the reading from the sector must start
 
-    int current_sector_pointer = 0;
+    int mft_virtual_blocks_passed = mft->current_MFT.virtualBlockNumber;
+    int mft_first_virtual_sector = 4 * mft_virtual_blocks_passed;
 
-    int passed_blocks = mft->current_MFT.virtualBlockNumber;
-    int passed_sectors = 4 * passed_blocks;
-    if (pointer_block <= passed_blocks){
+    // If the current_pointer byte is in a block that this mft tuple maps or in a tuple previous to this one
+    if (current_pointer_block <= mft_virtual_blocks_passed){
 
-      for (i=0; i<num_sectors; i++){
+      // Iterate through the contiguos sectors mapped by the mft tuple
+      for (i=0; i<mft_number_sectors; i++){
 
-        current_sector_pointer = 0;
-        if (pointer_sector <= i+passed_sectors){
+        sector_starting_byte = 0; // Reading starts at byte 0 by default
 
-          if (pointer_sector == i+passed_sectors){
-            current_sector_pointer = first_byte - (256*pointer_sector);
+        // If current_pointer is in this sector or a previous one
+        if (current_pointer_sector <= i+mft_first_virtual_sector){
+
+          // Is current_pointer is in this specific sector
+          if (current_pointer_sector == i+mft_first_virtual_sector){
+            sector_starting_byte = current_pointer - (256*current_pointer_sector);
           }
 
-          read_sector(i+first_sector, sector_buffer);
+          read_sector(i+mft_first_sector, sector_buffer);
 
-          int sector_current = ceil(ceil(first_byte/256.0)/4.0)-1;
-
-          if (sector_current == i){
-            current_sector_pointer = first_byte;
-          }
-
-          if (size + current_sector_pointer >= 256){ // If the amount of bytes to read is bigger than the amount of bytes in the sector
-            unsigned char temp_buffer[256-current_sector_pointer+1]; // Temporary buffer that stores bytes to be appended to buffer
+          if (bytes_left_to_copy + sector_starting_byte >= 256){ // If the amount of bytes to read is bigger than the amount of bytes in the sector
+            
+            unsigned char temp_buffer[256-sector_starting_byte+1]; // Temporary buffer that stores bytes to be appended to buffer
+            
             k = 0;
+
             // Copy wanted bytes only
-            for (j=current_sector_pointer; j<256; j++){
+            for (j=sector_starting_byte; j<256; j++){
               temp_buffer[k] = sector_buffer[j];
               k++;
             }
             temp_buffer[k] = '\0';
+
             buffer = append_buffers(buffer, temp_buffer);
-            size -= (256 - current_sector_pointer);
+            bytes_left_to_copy -= (256 - sector_starting_byte);
+
           }
           else{ // If all bytes to be read are in this sector
-            unsigned char temp_buffer[size]; // Temporary buffer that stores bytes to be appended to buffer
+
+            unsigned char temp_buffer[bytes_left_to_copy]; // Temporary buffer that stores bytes to be appended to buffer
 
             k = 0;
+
             // Copy wanted bytes only
-            for (j=current_sector_pointer; j<size+current_sector_pointer; j++){
+            for (j=sector_starting_byte; j<bytes_left_to_copy+sector_starting_byte; j++){
               temp_buffer[k] = sector_buffer[j];
               k++;
             }
             temp_buffer[k] = '\0';
+
             buffer = append_buffers(buffer, temp_buffer);
-            return copy_size;
+            opened_files[handle].current_pointer = current_pointer + size + 1; // Moves current_pointer to the next byte from where reading was finished
+            
+            return size;
           }
         }
       }
-
     }
+
     mft = mft->next;
   }
 
-  opened_files[handle].current_pointer = first_byte + size + 1; // Moves current_pointer to the next byte from where reading was finished
-
+  // Function couldn't read everything
   return -1;
-}
-
-// Ana
-/*
-*   TODO:
-*     Adapt this to copy the right amount of bytes to the final buffer
-*/
-int read_bytes_from_sector(int sector, int num_bytes){
-  unsigned char buffer[SECTOR_SIZE];
-  unsigned char bytes_read[num_bytes];
-
-  int error;
-
-  error = read_sector(sector, buffer);
-
-  if (error)
-    return -1;
-
-  int i =0;
-
-  for (i=0; i<num_bytes; i++){
-    bytes_read[i] = buffer[i];
-  }
-
-  for (i=0; i<num_bytes; i++){
-    printf("%02X\n", bytes_read[i]);
-  }
-
-  return 0;
 }
