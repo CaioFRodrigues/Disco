@@ -106,9 +106,9 @@ int main(int argc, char *argv[])
 	//printf ("\n%d\n", get_MFT_from_filename_and_dir(2050, "file1"));
 
 
-	// char file[6] = "/file2";
- //    open2 (file);
- //    printf ("%d", opened_files[0].file_MFT->sector);
+	 char file[7] = "/file2";
+     open2 (file);
+     printf ("%s", opened_files[0].file_path);
 
 
 	

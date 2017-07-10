@@ -74,9 +74,9 @@ int first_free_file_position(){
 }
 
 //Ana
-DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT_list* mft_list){
+DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT* mft_list){
 
-  MFT_list* mft_list_copy = mft_list;  
+  MFT* mft_list_copy = mft_list;  
   DWORD currentVirtualBlockNumber, numberOfContiguosBlocks;
 
   while (mft_list_copy != NULL){
@@ -92,5 +92,6 @@ DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT_list* mft_list){
       return mft_list_copy->current_MFT.logicalBlockNumber + (current_pointer - currentVirtualBlockNumber);
     }
   }
+  return -1;
 }
 
