@@ -65,4 +65,6 @@ int find_byte_position_in_logical_block(MFT* mft,int bytes);
 
 char* append_buffers( char* final_buffer, char* temp_buffer );
 
+int write_first_tuple_MFT_and_set_0_second(unsigned int sector, int offset, struct t2fs_4tupla t);
+
 #endif
