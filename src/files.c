@@ -22,7 +22,6 @@
 #include "../include/MFT_list.h"
 #include "../include/MFT.h"
 
-
 // Ana
 int read2(FILE2 handle, char * buffer, int size){
 
@@ -81,46 +80,47 @@ int read2(FILE2 handle, char * buffer, int size){
 
           if (bytes_left_to_copy + sector_starting_byte >= 256){ // If the amount of bytes to read is bigger than the amount of bytes in the sector
             
-            unsigned char temp_buffer[256-sector_starting_byte+1]; // Temporary buffer that stores bytes to be appended to buffer
-            
-            k = 0;
-
-            // Copy wanted bytes only
-            for (j=sector_starting_byte; j<256; j++){
-              temp_buffer[k] = sector_buffer[j];
-              k++;
-            }
-            temp_buffer[k] = '\0';
-
-            buffer = append_buffers(buffer, temp_buffer);
+            read_bytes(sector_starting_byte, 256, 
+                          256-sector_starting_byte, sector_buffer, buffer);
+                          
             bytes_left_to_copy -= (256 - sector_starting_byte);
 
           }
           else{ // If all bytes to be read are in this sector
+            
+            read_bytes(sector_starting_byte, bytes_left_to_copy+sector_starting_byte, 
+                          bytes_left_to_copy, sector_buffer, buffer);
 
-            unsigned char temp_buffer[bytes_left_to_copy]; // Temporary buffer that stores bytes to be appended to buffer
-
-            k = 0;
-
-            // Copy wanted bytes only
-            for (j=sector_starting_byte; j<bytes_left_to_copy+sector_starting_byte; j++){
-              temp_buffer[k] = sector_buffer[j];
-              k++;
-            }
-            temp_buffer[k] = '\0';
-
-            buffer = append_buffers(buffer, temp_buffer);
             opened_files[handle].current_pointer = current_pointer + size + 1; // Moves current_pointer to the next byte from where reading was finished
             
-            return size;
+            return size;  // Function ended correctly
           }
         }
       }
     }
-
     mft = mft->next;
   }
-
   // Function couldn't read everything
   return -1;
+}
+
+// Ana
+/* Given the starting and ending byte, the amount of bytes to copy, the source and the destination buffer,
+copies the specific bytes in the specific amounts to the destination buffer
+*/
+void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* source, char* destination){
+
+  unsigned char temp_buffer[bytes_to_copy+1]; // Temporary buffer that stores bytes to be appended to buffer
+
+  int k = 0, j = 0;
+
+  // Copy wanted bytes only
+  for (j=starting_byte; j<ending_byte; j++){
+    temp_buffer[k] = source[j];
+    k++;
+  }
+  temp_buffer[k] = '\0';
+
+  destination = append_buffers(destination, temp_buffer);
+
 }
