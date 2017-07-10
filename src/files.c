@@ -59,7 +59,7 @@ int delete2 (char *filename){
 
   /*
   * TODO:
-  *     Return -1 if filename is invalid
+  *     Return -1 if filename is invalid (doesn't exist or not a file)
   *     Check if file is opened
   *       If it is, in the end of the process its file descriptor must be marked as invalid
   */
@@ -75,11 +75,31 @@ int delete2 (char *filename){
   clear_file(mft, 0);
 }
 
+int rmdir2(char* pathname){
+
+  /*
+  * TODO:
+  *     Return -1 if dir is invalid (doesn't exist or not a dir)
+  *     Check if dir is opened
+  *       If it is, in the end of the process its dir descriptor must be marked as invalid
+  */
+
+  // Initialize it with path_return_record
+  struct t2fs_record file_record;
+
+  file_record.TypeVal = 0;
+
+  // Write record to disk
+  
+  MFT* mft; // Mock structure
+  clear_file(mft, 0);
+
+}
+
 // Ana
 int clear_file(MFT* mft, int current_pointer){
 
   int pointer_block = current_pointer/1024;
-
 
   int i =0;
   while (mft != NULL){
@@ -117,58 +137,9 @@ int clear_file(MFT* mft, int current_pointer){
           write_first_tuple_MFT_and_set_0_second(mft->sector, mft->offset*16, mft->current_MFT);
 
         }
-
       }
-
     }
     mft = mft->next;
   }	
-  return 1;
-}
-
-int write_first_tuple_MFT_and_set_0_second(unsigned int sector, int offset, struct t2fs_4tupla t)
-{
-	unsigned char buffer[SECTOR_SIZE];
-	int error = read_sector(sector, buffer);
-	unsigned int zero = 0x00;
-	if (error)
-		return -1;
-
-	unsigned int aux;
-	// write AtributeType in the first tuple in the MFT
-	int i;
-	for (i = 0; i < 4; i++)
-	{
-		aux = (t.atributeType >> 8 * i) & 0xff;
-		buffer[TUPLE_ATRTYPE + i + offset] = aux;
-	}
-	// write virtualBlockNumber
-	for (i = 0; i < 4; i++)
-	{
-		aux = (t.virtualBlockNumber >> 8 * i) & 0xff;
-		buffer[TUPLE_VBN + i + offset] = aux;
-	}
-	// write logicalBlockNumber
-	for (i = 0; i < 4; i++)
-	{
-		aux = (t.logicalBlockNumber >> 8 * i) & 0xff;
-		buffer[TUPLE_LBN + i + offset] = aux;
-	}
-	// write numberOfContiguousBocks
-	for (i = 0; i < 4; i++)
-	{
-		aux = (t.numberOfContiguosBlocks >> 8 * i) & 0xff;
-		buffer[TUPLE_NUMCONTIGBLOCK + i + offset] = aux;
-	}
-	// write 0 in the second tuple
-	for (i = 0; i < 4; i++)
-	{
-		buffer[TUPLE_ATRTYPE + 16 + i + offset] = zero;
-	}
-
-	int write_error = write_sector(sector, buffer);
-	if (write_error)
-		return -1;
-
-	return 1;
+  return 0;
 }

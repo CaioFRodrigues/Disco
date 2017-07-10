@@ -64,4 +64,8 @@ int virtual_block_to_logical_block(DWORD current_pointer, MFT* mft_list);
 
 int find_byte_position_in_logical_block(MFT* mft,int bytes);
 
+struct t2fs_record path_return_record(char* path);
+
+int write_first_tuple_MFT_and_set_0_second(unsigned int sector, int offset, struct t2fs_4tupla t);
+
 #endif

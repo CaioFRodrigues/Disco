@@ -114,7 +114,7 @@ int find_byte_position_in_logical_block(MFT* mft, int bytes){
 
 }
 
-
+// Arateus
 //funcao recebe um path e retorna um record com o arquivo ou dir
 struct t2fs_record path_return_record(char* path)
 {
@@ -194,4 +194,52 @@ struct t2fs_record path_return_record(char* path)
 
   // record = (struct t2fs_record)malloc(sizeof(struct t2fs_record));
   return record;
+}
+
+// Arateus
+int write_first_tuple_MFT_and_set_0_second(unsigned int sector, int offset, struct t2fs_4tupla t)
+{
+	unsigned char buffer[SECTOR_SIZE];
+	int error = read_sector(sector, buffer);
+	unsigned int zero = 0x00;
+	if (error)
+		return -1;
+
+	unsigned int aux;
+	// write AtributeType in the first tuple in the MFT
+	int i;
+	for (i = 0; i < 4; i++)
+	{
+		aux = (t.atributeType >> 8 * i) & 0xff;
+		buffer[TUPLE_ATRTYPE + i + offset] = aux;
+	}
+	// write virtualBlockNumber
+	for (i = 0; i < 4; i++)
+	{
+		aux = (t.virtualBlockNumber >> 8 * i) & 0xff;
+		buffer[TUPLE_VBN + i + offset] = aux;
+	}
+	// write logicalBlockNumber
+	for (i = 0; i < 4; i++)
+	{
+		aux = (t.logicalBlockNumber >> 8 * i) & 0xff;
+		buffer[TUPLE_LBN + i + offset] = aux;
+	}
+	// write numberOfContiguousBocks
+	for (i = 0; i < 4; i++)
+	{
+		aux = (t.numberOfContiguosBlocks >> 8 * i) & 0xff;
+		buffer[TUPLE_NUMCONTIGBLOCK + i + offset] = aux;
+	}
+	// write 0 in the second tuple
+	for (i = 0; i < 4; i++)
+	{
+		buffer[TUPLE_ATRTYPE + 16 + i + offset] = zero;
+	}
+
+	int write_error = write_sector(sector, buffer);
+	if (write_error)
+		return -1;
+
+	return 1;
 }
