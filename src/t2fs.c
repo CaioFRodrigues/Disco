@@ -284,49 +284,50 @@ FILE2 create2(char *filename)
   //   MFT_father = (unsigned int)get_MFTnumber_of_file_with_directory_number(tokenRecord, current_dir_sectorFather, SEARCHING_DIRECTORY);
     
   // }
-  printf("\nPAPITO");
+  // printf("\nPAPITO");
   MFT_father = get_parent_dir_MFT_sector(filename);
 
   //isolated_filename is the filename without the subdirectories it is in
   char *isolated_filename = (strrchr(filename, '/'));
-  printf("\nisolated filename: %s", isolated_filename);
+  // printf("\nisolated filename: %s", isolated_filename);
   isolated_filename = isolated_filename + 1;
-  printf("\nisolated filename: %s", isolated_filename);
+  // printf("\nisolated filename: %s", isolated_filename);
 
-  printf("\nPAPITO 2");
-  unsigned int file_position = (unsigned int)find_empty_MFT_reg();
+  // printf("\nPAPITO 2");
+  // unsigned int file_position = (unsigned int)find_empty_MFT_reg();
   
-  printf("\nfile position: %u", file_position);
+  // printf("\nfile position: %u", file_position);
 
-  MFT_sec = (file_position * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
+  // // MFT_sec = (file_position * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
+  // MFT_sec = file_position;
 
-  printf("\nMFT sec: %u", MFT_sec);
-  printf("\nMFT father: %u", MFT_father);
+  // printf("\nMFT sec: %u", MFT_sec);
+  // printf("\nMFT father: %u", MFT_father);
 
-  if(MFT_sec == -1)
-    return -1;
+  // if(MFT_sec == -1)
+  //   return -1;
 
   filenamecopy = strdup(filename);
   fatherRecord = strdup(filename);
 
   token = strtok(filenamecopy, "/");
   tokenRecord = strtok(fatherRecord, "/");
-  printf("\nToken: %s", token);
-  printf("\ntokenRecord: %s", tokenRecord);
-  if(strcmp(isolated_filename, token ) == 0)
-    printf("\nLOL");
+  // printf("\nToken: %s", token);
+  // printf("\ntokenRecord: %s", tokenRecord);
+  // if(strcmp(isolated_filename, token ) == 0)
+  //   printf("\nLOL");
 
   while(strcmp(token, isolated_filename) != 0)
   {
-    printf("\nToken: %s", token);
-    printf("\ntokenRecord: %s", tokenRecord);
+    // printf("\nToken: %s", token);
+    // printf("\ntokenRecord: %s", tokenRecord);
     token = strtok(filenamecopy, "/");
     if(strcmp(token,isolated_filename) == 0)
       break;
     tokenRecord = strtok(fatherRecord, "/");
   }
-  printf("\nPAPITO 3");
-  printf("\ntokenRecord: %s", tokenRecord);
+  // printf("\nPAPITO 3");
+  // printf("\ntokenRecord: %s", tokenRecord);
 
 // MUDAR ISSO AQUI
   if(strcmp(tokenRecord, isolated_filename) != 0)
@@ -342,6 +343,8 @@ FILE2 create2(char *filename)
   lastTPositionSector = MFT_father;
   lastT = find_last_tuple_MFT_register(lastTPositionSector); // last tuple with usable info, not type 0
   lastTPosition = find_position_last_tuple_MFT_register(lastTPositionSector);
+  // printf("\nlast position sector: %u", lastTPositionSector);
+  // printf("\nlast position: %u", lastTPosition);
   
   // this shall go to the last tuple in the sequence of registers if necessary
   while(lastT.atributeType == 2)
@@ -489,13 +492,13 @@ int mkdir2(char *pathname)
   char *isolated_filename = (strrchr(pathname, '/'));
   isolated_filename = isolated_filename + 1;
 
-  unsigned int file_position = (unsigned int)find_empty_MFT_reg();
+  // unsigned int file_position = (unsigned int)find_empty_MFT_reg();
 
-  MFT_sec = (file_position * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
+  // MFT_sec = (file_position * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
 
 
-  if(MFT_sec == -1)
-    return -1;
+  // if(MFT_sec == -1)
+  //   return -1;
   filenamecopy = strdup(pathname);
   fatherRecord = strdup(pathname);
 
@@ -521,7 +524,7 @@ int mkdir2(char *pathname)
 
   }
 
-  lastTPositionSector = MFT_sec;
+  lastTPositionSector = MFT_father;
   lastT = find_last_tuple_MFT_register(lastTPositionSector); // last tuple with usable info, not type 0
   lastTPosition = find_position_last_tuple_MFT_register(lastTPositionSector);
   
