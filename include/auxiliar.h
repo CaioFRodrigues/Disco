@@ -34,6 +34,11 @@
 #define BOOT_BLOCK_SIZE 4
 #define ROOT_MFT 6
 
+#define TUPLE_ATRTYPE 0
+#define TUPLE_VBN 4
+#define TUPLE_LBN 8
+#define TUPLE_NUMCONTIGBLOCK 12
+
 extern struct t2fs_bootBlock boot_block;
 
 //File Descriptor - Holds the info of an opened file
@@ -66,5 +71,10 @@ int find_byte_position_in_logical_block(MFT* mft,int bytes);
 char* append_buffers( char* final_buffer, char* temp_buffer );
 
 int write_first_tuple_MFT_and_set_0_second(unsigned int sector, int offset, struct t2fs_4tupla t);
+
+int alocate_needed_blocks(int blocks_needed, MFT* mft, MFT* last_mft);
+
+int insert_in_sector(int sector, char* content, int start, int size);
+
 
 #endif

@@ -19,7 +19,7 @@
 #include "../include/auxiliar.h"
 #include "../include/MFT.h"
 #include "../include/MFT_list.h"
-
+#include "../include/bitmap2.h"
 struct t2fs_bootBlock boot_block;
 
 //Ana
@@ -93,6 +93,8 @@ int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list){
       return mft_list_copy->current_MFT.logicalBlockNumber + (current_virtual_block - currentVirtualBlockNumber);
     }
   }
+  return -1;
+
 }
 
 // Ana
@@ -103,7 +105,7 @@ int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list){
 //be the 12th byte from the beginning of the equivalent logicacl block
 int find_byte_position_in_logical_block(MFT* mft, int bytes){
   
-  int num_sectors, num_blocks, current_logical_block_number, offsets_bytes;
+  int num_sectors, num_blocks, offsets_bytes;
 
   num_sectors = ceil(bytes/256);
   num_blocks = ceil(num_sectors/boot_block.MFTBlocksSize);
@@ -170,4 +172,67 @@ int write_first_tuple_MFT_and_set_0_second(unsigned int sector, int offset, stru
 		return -1;
 
 	return 1;
+}
+
+// Ana
+// Given a buffer with content to be inserted in a sector,
+// inserts it in the given place and writes it to the sector
+int insert_in_sector(int sector, char* content, int start, int size){
+
+    unsigned char sector_content[SECTOR_SIZE];
+// Buffer that will recieve the sliced buffer content
+
+    int i = 0, k = 0;
+    read_sector(sector, sector_content);
+
+    k = start;
+    for (i=0; i<size; i++){
+        sector_content[k] = content[i];
+        k++;
+    }
+
+    write_sector(sector, sector_content);
+
+    return 0;
+}
+
+
+// Ana
+/* Given the amount of blocks needed, a pointer to the mft list and a pointer to its last node
+alocates the blocks in the disk, creating/updating the MFT tuples to map the virtual blocks
+to the logical ones
+*/
+int alocate_needed_blocks(int blocks_needed, MFT* mft, MFT* last_mft){
+
+  int n = 0;
+
+  for (n=0; n<blocks_needed;n++){
+
+    int new_block = searchBitmap2(0);
+    if (setBitmap2(new_block, 1) != 0){
+      return -1;
+    }
+
+    // // New block is contiguos to the last one
+    if (new_block == last_mft->current_MFT.logicalBlockNumber + last_mft->current_MFT.numberOfContiguosBlocks){
+      last_mft->current_MFT.numberOfContiguosBlocks++;
+      write_first_tuple_MFT_and_set_0_second(last_mft->sector, (last_mft->offset)*16, last_mft->current_MFT);
+    }
+    else{ // New block needs new tuple
+      struct t2fs_4tupla new_tuple;
+      new_tuple.atributeType = 1;
+      new_tuple.logicalBlockNumber = new_block;
+      new_tuple.virtualBlockNumber = last_mft->current_MFT.virtualBlockNumber + last_mft->current_MFT.numberOfContiguosBlocks;
+      new_tuple.numberOfContiguosBlocks = 1;
+
+      // Treat situation in which sector and/or register is full
+      write_first_tuple_MFT_and_set_0_second(last_mft->sector, (last_mft->offset+1)*16, new_tuple);
+      mft = push_MFT(mft, new_tuple, last_mft->sector, (last_mft->offset)+1);
+      last_mft = last_mft->next;
+
+    }
+  }
+
+  return 0;
+
 }
