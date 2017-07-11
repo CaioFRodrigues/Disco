@@ -11,6 +11,7 @@
 #include "../include/MFT.h"
 #include "../include/directories.h"
 
+
 int main(int argc, char *argv[])
 {
 	init();
@@ -20,14 +21,6 @@ int main(int argc, char *argv[])
 	char file[] = "/file1";
 
 
-	int j = open2(file);
-	printf ("%d IT WORKED", j);
-	printf ("%s asdasdf\n", opened_files[0].file_path);
-
-
-
-	write2(0, buffer, 2066);
-	return 0;
-
+return 0;
 }
 

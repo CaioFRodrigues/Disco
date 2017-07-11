@@ -178,6 +178,61 @@ int get_MFTnumber_of_file_with_directory_number(char * filename, int directory_M
   else      
       return -1;
 
-  
+}
 
+//Arateus
+// Find the last tuple with info in the register
+// sector: sector where the register is
+// returns the last tuple
+// couldn't make an error except 
+struct t2fs_4tupla find_last_tuple_MFT_register(unsigned int sector)
+{
+  struct t2fs_4tupla actualTuple; 
+  struct t2fs_4tupla lastTuple;
+  unsigned char buffer[SECTOR_SIZE];
+  
+  int j;
+  int i;
+  for (i = 0; i < 2; i++)
+  {
+    if(read_sector(sector+i, buffer))
+      return lastTuple;
+      
+    lastTuple = fill_MFT(buffer, 0);
+    for (j = 1; j < 16; j++)
+    {
+      actualTuple = fill_MFT(buffer, j);
+      if(actualTuple.atributeType == 0)
+        return lastTuple;
+
+      lastTuple = fill_MFT(buffer, j);
+    }
+  }
+  return lastTuple;
+}
+
+int find_position_last_tuple_MFT_register(unsigned int sector)
+{
+  struct t2fs_4tupla actualTuple; 
+  // struct t2fs_4tupla lastTuple;
+  unsigned char buffer[SECTOR_SIZE];
+  
+  int j;
+  int i;
+  for (i = 0; i < 2; i++)
+  {
+    if(read_sector(sector+i, buffer))
+      return -1;
+      
+    // lastTuple = fill_MFT(buffer, 0);
+    for (j = 1; j < 16; j++)
+    {
+      actualTuple = fill_MFT(buffer, j);
+      if(actualTuple.atributeType == 0)
+        return j - 1 + i*16;
+
+      // lastTuple = fill_MFT(buffer, j);
+    }
+  }
+  return j + i*16;
 }
