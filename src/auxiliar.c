@@ -149,7 +149,7 @@ char* append_buffers( char* final_buffer, char* temp_buffer ){
   while (*final_buffer)
     final_buffer++;
   
-  while (*final_buffer++ = *temp_buffer++);
+  while ((*final_buffer++ = *temp_buffer++));
 
   return --final_buffer;
 }
@@ -160,7 +160,7 @@ copies the specific bytes in the specific amounts to the destination buffer
 */
 void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* source, char* destination){
 
-  unsigned char temp_buffer[bytes_to_copy+1]; // Temporary buffer that stores bytes to be appended to buffer
+  char temp_buffer[bytes_to_copy+1]; // Temporary buffer that stores bytes to be appended to buffer
 
   int k = 0, j = 0;
 

@@ -76,7 +76,7 @@ int seek2(FILE2 handle, DWORD offset){
 // Ana
 int read2(FILE2 handle, char * buffer, int size){
 
-  int i =0,j=0, k=0;
+  int i =0;
 
   // MFT* mft = read_MFT(opened_files[handle].first_MFT_tuple);
   MFT* mft = read_MFT(12);  // For testing only
@@ -132,7 +132,7 @@ int read2(FILE2 handle, char * buffer, int size){
           if (bytes_left_to_copy + sector_starting_byte >= 256){ // If the amount of bytes to read is bigger than the amount of bytes in the sector
             
             read_bytes(sector_starting_byte, 256, 
-                          256-sector_starting_byte, sector_buffer, buffer);
+                          256-sector_starting_byte, (char *) sector_buffer, (char *) buffer);
                           
             bytes_left_to_copy -= (256 - sector_starting_byte);
 
@@ -140,7 +140,7 @@ int read2(FILE2 handle, char * buffer, int size){
           else{ // If all bytes to be read are in this sector
             
             read_bytes(sector_starting_byte, bytes_left_to_copy+sector_starting_byte, 
-                          bytes_left_to_copy, sector_buffer, buffer);
+                          bytes_left_to_copy, (char *) sector_buffer, (char *) buffer);
 
             opened_files[handle].current_pointer = current_pointer + size + 1; // Moves current_pointer to the next byte from where reading was finished
             
