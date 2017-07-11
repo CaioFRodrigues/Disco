@@ -34,11 +34,18 @@
 #define BOOT_BLOCK_SIZE 4
 #define ROOT_MFT 6
 
+
+#define TUPLE_ATRTYPE 0
+#define TUPLE_VBN 4
+#define TUPLE_LBN 8
+#define TUPLE_NUMCONTIGBLOCK 12
+
 #define RECORD_TYPEVAL 0
 #define RECORD_NAME 1
 #define RECORD_BLOCK_FILESIZE 52
 #define RECORD_BYTES_FILESIZE 56
 #define RECORD_MFTNUMBER 60
+
 
 extern struct t2fs_bootBlock boot_block;
 
@@ -79,6 +86,18 @@ char* append_buffers( char* final_buffer, char* temp_buffer );
 
 
 void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* source, char* destination);
+
+DWORD virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list);
+
+int find_byte_position_in_logical_block(MFT* mft,int bytes);
+
+char* append_buffers( char* final_buffer, char* temp_buffer );
+
+int write_first_tuple_MFT_and_set_0_second(unsigned int sector, int offset, struct t2fs_4tupla t);
+
+int alocate_needed_blocks(int blocks_needed, MFT* mft, MFT* last_mft);
+
+int insert_in_sector(int sector, char* content, int start, int size);
 
 int first_free_dir_position();
 
