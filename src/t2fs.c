@@ -417,6 +417,7 @@ FILE2 create2(char *filename)
 
   //Initializes the root MFT
   int current_dir_sector = 6;//ROOT_MFT;
+  int current_dir_sectorFather = 6;
 
   //isolated_filename is the filename without the subdirectories it is in
   char *isolated_filename = (strrchr(filename, '/'));
@@ -429,8 +430,9 @@ FILE2 create2(char *filename)
     MFT_sec = (unsigned int)get_MFTnumber_of_file_with_directory_number(token, current_dir_sector, SEARCHING_DIRECTORY);
     if(strcmp(token,isolated_filename) != 0)
       break;
-    tokenRecord = strtok(fatherRecord, "/");
-    MFT_father = MFT_sec;
+    MFT_father = (unsigned int)get_MFTnumber_of_file_with_directory_number(tokenRecord, current_dir_sectorFather, SEARCHING_DIRECTORY);
+    // tokenRecord = strtok(fatherRecord, "/");
+    // MFT_father = MFT_sec;
   }
 
   if(MFT_sec == -1)
@@ -586,6 +588,7 @@ int mkdir2(char *pathname)
 
   //Initializes the root MFT
   int current_dir_sector = 6;//ROOT_MFT;
+  int current_dir_sectorFather = 6;
 
   //isolated_filename is the pathname without the subdirectories it is in
   char *isolated_filename = (strrchr(pathname, '/'));
@@ -595,12 +598,13 @@ int mkdir2(char *pathname)
   while(strcmp(token,isolated_filename) != 0)
   {
     // depht++;
-    tokenRecord = strtok(fatherRecord, "/");
-    MFT_father = MFT_sec;
+    // tokenRecord = strtok(fatherRecord, "/");
+    // MFT_father = MFT_sec;
     MFT_sec = (unsigned int)get_MFTnumber_of_file_with_directory_number(token, current_dir_sector, SEARCHING_DIRECTORY);
     // probably returning MFTNumber, use this as a powerfull weapon
-    // if(strcmp(token,isolated_filename) != 0)
-    //   break;
+    if(strcmp(token,isolated_filename) != 0)
+      break;
+    MFT_father = (unsigned int)get_MFTnumber_of_file_with_directory_number(tokenRecord, current_dir_sectorFather, SEARCHING_DIRECTORY);
     
   }
 
