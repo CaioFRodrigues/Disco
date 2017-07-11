@@ -111,15 +111,19 @@ int main(int argc, char *argv[])
      printf ("%s", opened_files[0].file_path);
 
 
-	FILE_DESCRIPTOR file_descriptor;
+    struct t2fs_record mytupla;
+    mytupla.TypeVal = 0x00;
 
-	file_descriptor.is_valid = 1;
-	int pos = first_free_dir_position();
+    for(int i; i<MAX_FILE_NAME_SIZE; i++)
+    	mytupla.name[i] = 0x00;
+    mytupla.name[0] =  'c';
+    mytupla.name[1] = '\0';
+    mytupla.blocksFileSize = 0;
+    mytupla.bytesFileSize = 2;
+    mytupla.MFTNumber = 3;
 
-	opened_directories[pos] = file_descriptor;
-	opened_directories[first_free_dir_position()] = file_descriptor;
+    update_file_record_info(file, mytupla);
 
-	printf ("%d\n", opened_directories[1].is_valid);
 
     return 0;
 
