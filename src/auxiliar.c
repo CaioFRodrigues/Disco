@@ -116,12 +116,12 @@ DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT* mft_list){
     currentVirtualBlockNumber = mft_list_copy->current_MFT.virtualBlockNumber;
     numberOfContiguosBlocks = mft_list_copy->current_MFT.numberOfContiguosBlocks;
     
-    if (numberOfContiguosBlocks + currentVirtualBlockNumber - 1 < current_virtual_block){ // If current_virtual_block is not mapped in this tuple
+    if (numberOfContiguosBlocks + currentVirtualBlockNumber - 1 < currentVirtualBlockNumber){ // If current_virtual_block is not mapped in this tuple
       mft_list_copy = mft_list_copy->next;
     }
     else{
       // currentVirtualBlockNumber maps to logicalBlockNumber, current_virtual_block = logicalBlockNumber + offset
-      return mft_list_copy->current_MFT.logicalBlockNumber + (current_virtual_block - currentVirtualBlockNumber);
+      return mft_list_copy->current_MFT.logicalBlockNumber + (currentVirtualBlockNumber - currentVirtualBlockNumber);
     }
   }
 
@@ -176,4 +176,55 @@ void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* sou
 
   destination = append_buffers(destination, temp_buffer);
 
+
+}
+
+
+//Arateus
+int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record)
+{
+  // unsigned int byte_sector = take_sector_from_empty_record_info(byte_pos);
+  // unsigned int byte_record_pos = take_record_position_in_dir(byte_pos);
+
+  unsigned char buffer[SECTOR_SIZE];
+
+  int error = read_sector(sector, buffer);
+  if(error)
+    return -1;
+
+  // write TypeVal
+  buffer[byte_pos] = record.TypeVal;
+  // write name
+  int i;
+  for (i = 0; i < MAX_FILE_NAME_SIZE; i++)
+  {
+    buffer[byte_pos+RECORD_NAME+i] = record.name[i];
+  }
+
+  unsigned int aux;
+  // write in buffer the blocksFileSize
+  for (i = 0; i < 4; i++)
+  {
+    aux = (record.blocksFileSize >> 8*i)&0xff;
+    buffer[byte_pos+RECORD_BLOCK_FILESIZE+i] = aux;
+  }
+  //write in buffer for the bytesFileSize
+  for (i = 0; i < 4; i++)
+  {
+    aux = (record.bytesFileSize >> 8*i)&0xff;
+    buffer[byte_pos+RECORD_BYTES_FILESIZE+i] = aux;
+  }
+  // write for the MFTNumber
+  for (i = 0; i < 4; i++)
+  {
+    aux = (record.MFTNumber >> 8*i)&0xff;
+    buffer[byte_pos+RECORD_MFTNUMBER+i] = aux;
+  }
+
+  // write buffer in sector
+  int write_error = write_sector(sector, buffer);
+  if(write_error)
+    return -1;
+
+  return 1;
 }

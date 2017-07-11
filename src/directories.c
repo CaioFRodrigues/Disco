@@ -132,3 +132,71 @@ int get_parent_dir_MFT_sector(char *filename){
 
 }
 
+
+//Caio
+//Given a t2fs_record and a filename, finds where the file is located and writes the content of the t2fs_record into it
+//Returns 0 if it has success, -1 if it fails
+int update_file_record_info(char * filename, struct t2fs_record record){
+
+	int directory_MFT_sector = get_parent_dir_MFT_sector(filename);
+
+	MFT * directory_MFT = read_MFT(directory_MFT_sector);
+
+	MFT * iterator = directory_MFT;
+
+	while (iterator != NULL){
+		int next_block = iterator->current_MFT.logicalBlockNumber * 4;
+	
+		for (int current_block = 0; current_block < directory_MFT->current_MFT.logicalBlockNumber; current_block++){
+
+			for (int current_sector = 0; current_sector <  boot_block.blockSize; current_sector++){
+				 
+				int next_sector = next_block + current_sector + (current_block * boot_block.blockSize);
+
+				int error = update_record_info(filename, record, next_sector);
+				if (error == 0)
+					return 0;
+			}
+
+		}
+
+		iterator = iterator->next;
+
+	}
+
+
+	return -1;
+
+
+
+}
+
+
+//Caio
+// Given a name, a record and a buffer,  writes the record into the buffer of the file_name
+//Returns -1 if it has success, -1 if it fails
+int update_record_info(char *filename, struct t2fs_record record, int sector){
+
+	//Reads current sector
+	unsigned char buffer[SECTOR_SIZE];
+	read_sector(sector, buffer);
+
+	//Real filename, without the directories
+	char *isolated_filename = (strrchr(filename, '/'));
+	isolated_filename = isolated_filename + 1;
+
+
+	for (int i = 0; i < RECORDS_PER_SECTOR; i++) {
+
+		struct t2fs_record current_record = fill_directory(buffer, i);
+
+		//Found the record, write in it
+		if (strcmp(isolated_filename, current_record.name) == 0){
+			write_record_in_dir(sector, i * RECORD_SIZE, record);
+			return 0;
+		}
+
+	}
+
+	return -1;
+}
