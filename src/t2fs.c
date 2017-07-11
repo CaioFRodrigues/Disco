@@ -22,6 +22,16 @@
 #include "../include/MFT.h"
 #include "../include/MFT_list.h"
 
+//Arateus
+int identify2(char *name, int size){
+	char devs[] = {"Ana Paula Mello 260723\nArateus Meneses 242260\nCaio Rodrigues 261578\0"};
+    name[size] = '\0';
+    if(strncpy(name, devs, size))
+        return 0;
+    else
+        return -1;
+}
+
 //Ana
 int close2(FILE2 handle){
 
