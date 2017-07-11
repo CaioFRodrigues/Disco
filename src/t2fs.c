@@ -400,7 +400,7 @@ FILE2 create2(char *filename)
 
 
   // write tuple in the MFT
-  if(write_first_tuple_MFT_and_set_0_second(empty_MFT_sector, emptyTupla) != 1)
+  if(write_first_tuple_MFT_and_set_0_second(empty_MFT_sector, 0, emptyTupla) != 1)
     return -1;
 
   if(clear_block(empty_block) != 1)
@@ -582,7 +582,7 @@ int mkdir2(char *pathname)
 
 
   // write tuple in the MFT
-  if(write_first_tuple_MFT_and_set_0_second(empty_MFT_sector, emptyTupla) != 1)
+  if(write_first_tuple_MFT_and_set_0_second(empty_MFT_sector, 0, emptyTupla) != 1)
     return -1;
 
   if(clear_block(empty_block) != 1)

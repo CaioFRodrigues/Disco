@@ -452,56 +452,6 @@ int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_
   return 1;
 }
 
-//Arateus
-// write tuple in the first position of the MFT register and set the secon tuple with 0x0000
-// given a sector and the desired tuple to insert
-// it will return 1 if it worked or -1 if something goes wrong
-int write_first_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t)
-{
-  unsigned char buffer[SECTOR_SIZE];
-  int error = read_sector(sector, buffer);
-  unsigned int zero = 0x00;
-  if(error)
-    return -1;
-
-  unsigned int aux;
-  // write AtributeType in the first tuple in the MFT
-  int i;
-  for (i = 0; i < 4; i++)
-  {
-    aux = (t.atributeType >> 8*i)&0xff;
-    buffer[TUPLE_ATRTYPE+i] = aux;
-  }
-  // write virtualBlockNumber
-  for (i = 0; i < 4; i++)
-  {
-    aux = (t.virtualBlockNumber >> 8*i)&0xff;
-    buffer[TUPLE_VBN+i] = aux;
-  }
-  // write logicalBlockNumber
-  for (i = 0; i < 4; i++)
-  {
-    aux = (t.logicalBlockNumber >> 8*i)&0xff;
-    buffer[TUPLE_LBN+i] = aux;
-  }
-  // write numberOfContiguousBlocks
-  for (i = 0; i < 4; i++)
-  {
-    aux = (t.numberOfContiguosBlocks >> 8*i)&0xff;
-    buffer[TUPLE_NUMCONTIGBLOCK+i] = aux;
-  }
-  // write 0 in the second tuple
-  for (i = 0; i < 4; i++)
-  {
-    buffer[TUPLE_ATRTYPE+16+i] = zero;
-  }
-
-  int write_error = write_sector(sector, buffer);
-  if(write_error)
-    return -1;
-
-  return 1;
-}
 
 int write_tuple(unsigned int sector, struct t2fs_4tupla t, unsigned int offset)
 {
