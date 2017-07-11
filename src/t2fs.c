@@ -10,55 +10,38 @@
 //Caio
 //Open2: Searches the filename on the tree of directories, then returns allocates the handler to the array of opened files
 FILE2 open2 (char *filename){
- 	
-	char *token, *filenamecopy;
+  
 
-	filenamecopy = strdup(filename);
-	
-	token = strtok(filenamecopy, "/");
-	
+  int director_sector = get_parent_dir_MFT_sector(filename);
 
-	//Initializes the root MFT
-	int current_dir_sector = ROOT_MFT;
-	
-	//isolated_filename is the filename without the subdirectories it is in
-	char *isolated_filename = (strrchr(filename, '/'));
-	isolated_filename = isolated_filename + 1;
-	
-	//Goes through the subdirectories
-	while(strcmp(token,isolated_filename) != 0){
-		get_MFTnumber_of_file_with_directory_number(token, current_dir_sector, SEARCHING_DIRECTORY);
-	}
+  //isolated_filename is the filename without the subdirectories it is in
+  char *isolated_filename = (strrchr(filename, '/'));
 
-	int file_position = get_MFTnumber_of_file_with_directory_number(token, current_dir_sector, SEARCHING_FILE);
-	
+  int file_position = get_MFTnumber_of_file_with_directory_number(isolated_filename, director_sector, SEARCHING_DIRECTORY);
+  
 
-	int file_mft_sector = (file_position * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
+  int file_mft_sector = (file_position * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
 
 
-	FILE_DESCRIPTOR file_descriptor;
+  FILE_DESCRIPTOR file_descriptor;
 
-	//Initializes the file handler
-	file_descriptor.current_pointer = 0;
+  //Initializes the file handler
+  file_descriptor.current_pointer = 0;
 
-	//Puts the name of the file on the handler
-	file_descriptor.file_path = strdup(isolated_filename);
+  //Puts the name of the file on the handler
+  file_descriptor.file_path = strdup(filename);
 
-	//The loop ends with current_dir_sector at the MFT of the file
-	file_descriptor.first_MFT_tuple = file_mft_sector;
+  //The loop ends with current_dir_sector at the MFT of the file
+  file_descriptor.first_MFT_tuple = file_mft_sector;
 
-	//Declares the file as valid
-	file_descriptor.is_valid = 1;
-	
-	isolated_filename = isolated_filename - 1;
-	free(isolated_filename);
-	
+  //Declares the file as valid
+  file_descriptor.is_valid = 1;
+  
 
 
-	opened_files[first_free_file_position()] = file_descriptor;
+  opened_files[first_free_file_position()] = file_descriptor;
 
-	return 0;
-
+  return 0;
 
 }
 
@@ -85,36 +68,61 @@ FILE2 create2(char *filename)
   unsigned int lastTPositionSector;
   unsigned int writeBlock;
 
+  // filenamecopy = strdup(filename);
+  // fatherRecord = strdup(filename);
+
+  // token = strtok(filenamecopy, "/");
+  // tokenRecord = strtok(fatherRecord, "/");
+
+  //Initializes the root MFT
+  // int current_dir_sector = 6;//ROOT_MFT;
+  // int current_dir_sectorFather = 6;
+  MFT_father = MFT_sec;
+
+  //isolated_filename is the filename without the subdirectories it is in
+  // char *isolated_filename = (strrchr(filename, '/'));
+  // isolated_filename = isolated_filename + 1;
+  
+  //Goes through the subdirectories
+  // while(strcmp(token,isolated_filename) != 0)
+  // {
+  //   // depht++;
+  //   MFT_sec = (unsigned int)get_MFTnumber_of_file_with_directory_number(token, current_dir_sector, SEARCHING_DIRECTORY);
+  //   // probably returning MFTNumber, use this as a powerfull weapon
+  //   if(strcmp(token,isolated_filename) != 0)
+  //     break;
+  //   MFT_father = (unsigned int)get_MFTnumber_of_file_with_directory_number(tokenRecord, current_dir_sectorFather, SEARCHING_DIRECTORY);
+    
+  // }
+  MFT_father = get_parent_dir_MFT_sector(filename);
+
+  //isolated_filename is the filename without the subdirectories it is in
+  char *isolated_filename = (strrchr(filename, '/'));
+  isolated_filename = isolated_filename + 1;
+
+  unsigned int file_position = get_MFTnumber_of_file_with_directory_number(isolated_filename, (int)MFT_father, SEARCHING_DIRECTORY);
+  
+  MFT_sec = (file_position * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
+
+
+  if(MFT_sec == -1)
+    return -1;
+
   filenamecopy = strdup(filename);
   fatherRecord = strdup(filename);
 
   token = strtok(filenamecopy, "/");
   tokenRecord = strtok(fatherRecord, "/");
 
-  //Initializes the root MFT
-  int current_dir_sector = 6;//ROOT_MFT;
-  int current_dir_sectorFather = 6;
-  MFT_father = MFT_sec;
-
-  //isolated_filename is the filename without the subdirectories it is in
-  char *isolated_filename = (strrchr(filename, '/'));
-  isolated_filename = isolated_filename + 1;
-  
-  //Goes through the subdirectories
   while(strcmp(token,isolated_filename) != 0)
   {
-    // depht++;
-    MFT_sec = (unsigned int)get_MFTnumber_of_file_with_directory_number(token, current_dir_sector, SEARCHING_DIRECTORY);
-    // probably returning MFTNumber, use this as a powerfull weapon
-    if(strcmp(token,isolated_filename) != 0)
+    token = strtok(filenamecopy, "/");
+    if(strcmp(token,isolated_filename) == 0)
       break;
-    MFT_father = (unsigned int)get_MFTnumber_of_file_with_directory_number(tokenRecord, current_dir_sectorFather, SEARCHING_DIRECTORY);
-    
+    tokenRecord = strtok(fatherRecord, "/");
   }
 
-  if(MFT_sec == -1)
-    return -1;
-
+// MUDAR ISSO AQUI
   if(strcmp(tokenRecord, isolated_filename) != 0)
   {
     if(MFT_father != 0){
@@ -252,50 +260,66 @@ int mkdir2(char *pathname)
   struct t2fs_record record;
 
   struct t2fs_4tupla lastT;
-   // fatherTuple;
   int lastTPosition;
   unsigned int lastTPositionSector;
   unsigned int writeBlock;
 
+  // filenamecopy = strdup(filename);
+  // fatherRecord = strdup(filename);
+
+  // token = strtok(filenamecopy, "/");
+  // tokenRecord = strtok(fatherRecord, "/");
+
+  //Initializes the root MFT
+  // int current_dir_sector = 6;//ROOT_MFT;
+  // int current_dir_sectorFather = 6;
+  MFT_father = MFT_sec;
+
+  //isolated_filename is the filename without the subdirectories it is in
+  // char *isolated_filename = (strrchr(filename, '/'));
+  // isolated_filename = isolated_filename + 1;
+  
+  //Goes through the subdirectories
+  // while(strcmp(token,isolated_filename) != 0)
+  // {
+  //   // depht++;
+  //   MFT_sec = (unsigned int)get_MFTnumber_of_file_with_directory_number(token, current_dir_sector, SEARCHING_DIRECTORY);
+  //   // probably returning MFTNumber, use this as a powerfull weapon
+  //   if(strcmp(token,isolated_filename) != 0)
+  //     break;
+  //   MFT_father = (unsigned int)get_MFTnumber_of_file_with_directory_number(tokenRecord, current_dir_sectorFather, SEARCHING_DIRECTORY);
+    
+  // }
+  MFT_father = get_parent_dir_MFT_sector(pathname);
+
+  //isolated_filename is the filename without the subdirectories it is in
+  char *isolated_filename = (strrchr(pathname, '/'));
+  isolated_filename = isolated_filename + 1;
+
+  unsigned int file_position = get_MFTnumber_of_file_with_directory_number(isolated_filename, (int)MFT_father, SEARCHING_DIRECTORY);
+  
+  MFT_sec = (file_position * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
+
+
+  if(MFT_sec == -1)
+    return -1;
   filenamecopy = strdup(pathname);
   fatherRecord = strdup(pathname);
 
   token = strtok(filenamecopy, "/");
   tokenRecord = strtok(fatherRecord, "/");
 
-  //Initializes the root MFT
-  int current_dir_sector = 6;//ROOT_MFT;
-  int current_dir_sectorFather = 6;
-  MFT_father = MFT_sec;
-
-  //isolated_filename is the pathname without the subdirectories it is in
-  char *isolated_filename = (strrchr(pathname, '/'));
-  isolated_filename = isolated_filename + 1;
-  
-  //Goes through the subdirectories
   while(strcmp(token,isolated_filename) != 0)
   {
-    // depht++;
-    // tokenRecord = strtok(fatherRecord, "/");
-    // MFT_father = MFT_sec;
-    MFT_sec = (unsigned int)get_MFTnumber_of_file_with_directory_number(token, current_dir_sector, SEARCHING_DIRECTORY);
-    // probably returning MFTNumber, use this as a powerfull weapon
-    if(strcmp(token,isolated_filename) != 0)
+    token = strtok(filenamecopy, "/");
+    if(strcmp(token,isolated_filename) == 0)
       break;
-    MFT_father = (unsigned int)get_MFTnumber_of_file_with_directory_number(tokenRecord, current_dir_sectorFather, SEARCHING_DIRECTORY);
-    
+    tokenRecord = strtok(fatherRecord, "/");
   }
 
-  if(MFT_sec == -1)
-    return -1;
-
-  // printf("\nMFT_father: %u\nMFT_sec: %u", MFT_father, MFT_sec);
-  // printf("\ntoken: %s", token);
-  // printf("\ntokenRecord: %s", tokenRecord);
-  // here I need to take the record of the directory where the file will be added
+// MUDAR ISSO AQUI
   if(strcmp(tokenRecord, isolated_filename) != 0)
   {
-    // printf("\nTO NA TV MAE");
     if(MFT_father != 0){
       if(find_record_and_add_byteRecord(MFT_father, tokenRecord) != 1)
         return -1;
@@ -397,5 +421,3 @@ int mkdir2(char *pathname)
 
   return 0; // if it worked :)
 }
-
-// na read eu preciso atualizar a quantidade de bytes do record
