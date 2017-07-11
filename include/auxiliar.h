@@ -99,9 +99,6 @@ void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* sou
 
 int first_free_dir_position();
 
-int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record);
-int first_free_file_position();
-
 int find_empty_MFT_reg();
 
 unsigned int take_sector_from_position(unsigned int record_position);
