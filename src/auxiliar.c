@@ -153,7 +153,7 @@ char* append_buffers( char* final_buffer, char* temp_buffer ){
   while (*final_buffer)
     final_buffer++;
   
-  while (*final_buffer++ = *temp_buffer++);
+  while ((*final_buffer++ = *temp_buffer++));
 
   return --final_buffer;
 }
