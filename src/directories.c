@@ -63,6 +63,8 @@ struct t2fs_record fill_directory(unsigned char* buffer, int directory_number){
   //Struct where info will be saved
   struct t2fs_record directory;
 
+  for (int i = 0; i < 51; i++)
+  	directory.name[i] = 0x00;
   //Byte where the the tupla starts on the buffer
   int directory_start =  directory_number * RECORD_SIZE;
 
@@ -120,11 +122,11 @@ int get_parent_dir_MFT_sector(char *filename){
 
 		//Recalculates the current_dir_sector
 		current_dir_sector = (current_dir_sector * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
-
+		printf ("THIS IS NOW:%d", current_dir_sector);
 	}
 
 	free(filenamecopy);
-
+	
 	return current_dir_sector;
 
 
@@ -198,4 +200,76 @@ int update_record_info(char *filename, struct t2fs_record record, int sector){
 	}
 
 	return -1;
+}
+
+
+struct t2fs_record search_file_in_directory(char *name, int dir_sector){
+
+  unsigned char buffer[SECTOR_SIZE];
+
+
+  //For every sector in a block
+  for (int current_sector_in_block = 0; current_sector_in_block < boot_block.blockSize;current_sector_in_block++){
+  	
+  	//Describes the current sector to be searched from both offsets
+  	int current_sector = dir_sector + current_sector_in_block;
+  	
+  	read_sector(current_sector, buffer);
+
+
+  	//For every record in a block
+  	for(int current_record = 0; current_record < RECORDS_PER_SECTOR; current_record++){
+  		//Gets the info of the current record
+  		struct t2fs_record current_file = fill_directory(buffer, current_record);
+		printf ("CURRENT_FILE: %02X\n", current_file.TypeVal);
+		//checks if it is valid  	
+  		if (current_file.TypeVal == 1 || current_file.TypeVal == 2){
+  			//check if the name and type are the same
+  			printf ("FOUND SOMETHING VALID\n");
+  			printf ("%s %s", name, current_file.name);
+	  		if(strcmp(current_file.name, name) == 0){
+	  			printf ("SOMETHING IS HAPPENING");
+	  			return current_file;
+
+	  		}
+  		}
+  	}
+
+  }
+
+  //Failed
+
+  struct t2fs_record failed;
+  failed.TypeVal = 0;
+  return failed;
+
+
+
+}
+
+
+struct t2fs_record search_file_in_directory_given_MFT(char *name, MFT * mft){
+
+	MFT * aux = mft;
+
+	struct t2fs_record new_struct;
+	while (aux != NULL){
+
+		//For every node goes through the contiguous blocks
+		for (int current_block = 0; current_block < aux->current_MFT.numberOfContiguosBlocks; current_block++){
+			//Gets next position by comparing the strings
+			int current_sector = current_block  + aux->current_MFT.logicalBlockNumber * 4;
+			printf ("oi oi oi %d\n", current_sector);
+			new_struct = search_file_in_directory(name, current_sector);
+			
+			//If it has found the file,returns it
+			printf ("This is what we've got: %d", new_struct.TypeVal);
+			if (new_struct.TypeVal != 0)
+				return new_struct;
+
+		}
+		aux = aux->next;
+	}
+
+	return new_struct;
 }

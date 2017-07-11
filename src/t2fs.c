@@ -158,15 +158,17 @@ int read2(FILE2 handle, char * buffer, int size){
 //Caio
 //Open2: Searches the filename on the tree of directories, then returns allocates the handler to the array of opened files
 FILE2 open2 (char *filename){
- 	
+
+
 
 	int director_sector = get_parent_dir_MFT_sector(filename);
 
 	//isolated_filename is the filename without the subdirectories it is in
 	char *isolated_filename = (strrchr(filename, '/'));
-
+  isolated_filename = isolated_filename + 1;
 	int file_position = get_MFTnumber_of_file_with_directory_number(isolated_filename, director_sector, SEARCHING_DIRECTORY);
 	
+
 
 	int file_mft_sector = (file_position * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
 
@@ -186,9 +188,9 @@ FILE2 open2 (char *filename){
 	file_descriptor.is_valid = 1;
 	
 
-
-	opened_files[first_free_file_position()] = file_descriptor;
-
+	int i = first_free_file_position();
+	opened_files[i] = file_descriptor;
+	printf ("o2asreasrei\n\n");
 	return 0;
 
 
@@ -203,9 +205,8 @@ DIR2 opendir(char *filename){
 
 	//isolated_filename is the filename without the subdirectories it is in
 	char *isolated_filename = (strrchr(filename, '/'));
-
+  isolated_filename = isolated_filename + 1;
 	int dir_position = get_MFTnumber_of_file_with_directory_number(isolated_filename, director_sector, SEARCHING_DIRECTORY);
-	
 
 	int dir_mft_sector = (dir_position * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
 
@@ -218,12 +219,13 @@ DIR2 opendir(char *filename){
 	//Puts the name of the file on the handler
 	file_descriptor.file_path = strdup(filename);
 
+
 	//The loop ends with current_dir_sector at the MFT of the file
 	file_descriptor.first_MFT_tuple = dir_mft_sector;
 
 	//Declares the file as valid
 	file_descriptor.is_valid = 1;
-	
+
 	int index = first_free_dir_position();
 
 	opened_directories[index] = file_descriptor;
@@ -414,7 +416,7 @@ FILE2 create2(char *filename)
 
 
   // write tuple in the MFT
-  if(write_first_tuple_MFT_and_set_0_second(empty_MFT_sector, emptyTupla) != 1)
+  if(write_first_tuple_MFT_and_set_0_second(empty_MFT_sector, 0, emptyTupla) != 1)
     return -1;
 
   if(clear_block(empty_block) != 1)
@@ -596,7 +598,7 @@ int mkdir2(char *pathname)
 
 
   // write tuple in the MFT
-  if(write_first_tuple_MFT_and_set_0_second(empty_MFT_sector, emptyTupla) != 1)
+  if(write_first_tuple_MFT_and_set_0_second(empty_MFT_sector, 0, emptyTupla) != 1)
     return -1;
 
   if(clear_block(empty_block) != 1)

@@ -97,6 +97,18 @@ char* append_buffers( char* final_buffer, char* temp_buffer );
 
 void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* source, char* destination);
 
+DWORD virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list);
+
+int find_byte_position_in_logical_block(MFT* mft,int bytes);
+
+char* append_buffers( char* final_buffer, char* temp_buffer );
+
+int write_first_tuple_MFT_and_set_0_second(unsigned int sector, int offset, struct t2fs_4tupla t);
+
+int alocate_needed_blocks(int blocks_needed, MFT* mft, MFT* last_mft);
+
+int insert_in_sector(int sector, char* content, int start, int size);
+
 int first_free_dir_position();
 
 int find_empty_MFT_reg();
@@ -109,7 +121,6 @@ unsigned int find_empty_record_info(unsigned int lbn, unsigned int contigBlock);
 
 int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record);
 
-int write_first_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t);
 
 int write_on_last_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t, unsigned int tupleNum);
 
