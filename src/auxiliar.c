@@ -543,6 +543,8 @@ int find_record_and_add_byteRecord(unsigned int sector, char *name)
   int error;
   unsigned int s;
   unsigned int MFT_sec = sector;
+  int g;
+  
 
 // search at MFT for desired info
   int i;
@@ -580,9 +582,12 @@ int find_record_and_add_byteRecord(unsigned int sector, char *name)
             }
             for (r = 0; r < 4; r++)
             { //each sector has max 4 records
+
               record = fill_directory(bufferBD, r);
+              for(g = (int)strlen(record.name) + 1; g< MAX_FILE_NAME_SIZE; g++)
+                record.name[g] = 0x00;
               if(strcmp(name, record.name)==0){
-                record.bytesFileSize += 64;
+                record.bytesFileSize = record.bytesFileSize + 64;
                 int directory_start =  r * RECORD_SIZE;
                 printf("\nrecord.bytesFileSize: %u", record.bytesFileSize);
 

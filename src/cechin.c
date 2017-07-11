@@ -58,8 +58,8 @@ int main(int argc, char *argv[])
 	printf("Record bytesFileSize: %d\n", r.bytesFileSize);
 	printf("Record MFTNumber: %d\n", r.MFTNumber);
 
-	FILE2 batata = create2("/file3");
-	mkdir2("/arateus");
+	// FILE2 batata = create2("/file3");
+	// mkdir2("/arateus");
 	// mkdir2("/olar1");
 	// mkdir2("/olar2");
 	// mkdir2("/olar3");
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	// mkdir2("/olar19");
 	// mkdir2("/olar20");
 
-	mkdir2("/arateus/QUEOTA");
+	// mkdir2("/arateus/QUEOTA");
 
 	// char	command[128];
 	// char	*cmd;
