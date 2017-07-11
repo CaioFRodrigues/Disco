@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
 	printf("First empty MFT register: %d\n", first_empty_reg_MFT);
 
-	printf("First ROOT byte: %d\n", find_empty_record_info(0x802));
+	printf("First ROOT byte: %d\n", find_empty_record_info(0x802, 1));
 
 	struct t2fs_record r = path_return_record("/file2");
 
@@ -59,6 +59,27 @@ int main(int argc, char *argv[])
 	printf("Record MFTNumber: %d\n", r.MFTNumber);
 
 	// FILE2 batata = create2("/file3");
+	// mkdir2("/olar1");
+	// mkdir2("/olar2");
+	// mkdir2("/olar3");
+	// mkdir2("/olar4");
+	// mkdir2("/olar5");
+	// mkdir2("/olar6");
+	// mkdir2("/olar7");
+	// mkdir2("/olar8");
+	// mkdir2("/olar9");
+	// mkdir2("/olar10");
+	// mkdir2("/olar11");
+	// mkdir2("/olar12");
+	// mkdir2("/olar13");
+	// mkdir2("/olar14");
+	// mkdir2("/olar15");
+	// mkdir2("/olar16");
+	// mkdir2("/olar17");
+	// mkdir2("/olar18");
+	// mkdir2("/olar19");
+	// mkdir2("/olar20");
+	mkdir2("/arateus/QUEOTA");
 
 	// char	command[128];
 	// char	*cmd;

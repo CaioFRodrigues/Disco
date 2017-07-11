@@ -89,17 +89,21 @@ unsigned int take_sector_from_position(unsigned int record_position);
 
 unsigned int take_right_position(unsigned int record_position);
 
-unsigned int find_empty_record_info(unsigned int vbn);
+unsigned int find_empty_record_info(unsigned int lbn, unsigned int contigBlock);
 
 int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record);
 
 int write_first_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t);
+
+int write_on_last_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t, unsigned int tupleNum);
 
 int clear_sector(unsigned int sector);
 
 int clear_block(int init_sector);
 
 struct t2fs_record path_return_record(char* path);
+
+int find_record_and_add_byteRecord(unsigned int sector, char *name);
 
 
 #endif

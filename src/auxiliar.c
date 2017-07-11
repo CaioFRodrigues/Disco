@@ -35,6 +35,7 @@ int init(){
   for (i=ID; i<ID+4; i++){
       boot_block.id[i]=buffer[i];
   }
+  boot_block.id[ID+4]='\0';
 
   boot_block.version = (buffer[VERSION+1] << 8) | buffer[VERSION];
 
@@ -153,10 +154,11 @@ unsigned int take_right_position(unsigned int record_position)
 // find the first empty record space in bytes at the BD (the name of this function is not quite good)
 // VBN: Virtual Block Number
 // return byte_position or -1 if something went wrong or is full
-unsigned int find_empty_record_info(unsigned int lbn)
+unsigned int find_empty_record_info(unsigned int lbn, unsigned int contigBlock)
 {
   unsigned char buffer[SECTOR_SIZE];
   unsigned int sector = (lbn * (unsigned int)boot_block.blockSize); // convert block into sector
+  unsigned int totalSize = contigBlock * 4;
 
   BYTE type;
 
@@ -164,7 +166,7 @@ unsigned int find_empty_record_info(unsigned int lbn)
   int cont = 0;
 
   int k;
-  for(k = 0; k < 4; k++) // 'till the end of the block
+  for(k = 0; k < totalSize; k++) // 'till the end of the block
   {
     error = read_sector(sector+k, buffer);
     if(error)
@@ -289,22 +291,82 @@ int write_first_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tup
   return 1;
 }
 
-int write_on_last_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t, unsigned int tupleNum)
+int write_tuple(unsigned int sector, struct t2fs_4tupla t, unsigned int offset)
 {
   unsigned char buffer[SECTOR_SIZE];
   int error = read_sector(sector, buffer);
+  if(error)
+    return -1;
+  unsigned int aux;
+  int i;
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.atributeType >> 8*i)&0xff;
+    buffer[TUPLE_ATRTYPE+i+offset] = aux;
+  }
+  // write virtualBlockNumber
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.virtualBlockNumber >> 8*i)&0xff;
+    buffer[TUPLE_VBN+i+offset] = aux;
+  }
+  // write logicalBlockNumber
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.logicalBlockNumber >> 8*i)&0xff;
+    buffer[TUPLE_LBN+i+offset] = aux;
+  }
+  // write numberOfContiguousBlocks
+  for (i = 0; i < 4; i++)
+  {
+    aux = (t.numberOfContiguosBlocks >> 8*i)&0xff;
+    buffer[TUPLE_NUMCONTIGBLOCK+i+offset] = aux;
+  }
+  int write_error = write_sector(sector, buffer);
+  if(write_error)
+    return -1;
+  return 1;
+}
+
+int write_on_last_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t, unsigned int tupleNum)
+{
+  unsigned char buffer[SECTOR_SIZE];
+  unsigned int realSector;
+  struct t2fs_4tupla newMFTRegister;
+  int error;
+  unsigned int aux;
   unsigned int zero = 0x00;
   unsigned int offset = tupleNum * 16;
 
+  if(tupleNum >= 16 && tupleNum <= 31)
+    realSector = sector + 1;
+  else
+    realSector = sector;
+
+  if(tupleNum == 31) // last tuple
+  {
+    // alloc new MFT Register
+    int newRegister = find_empty_MFT_reg();
+    int newRegisterSector = newRegister*2 + 4;
+
+    newMFTRegister.atributeType = 2;
+    newMFTRegister.virtualBlockNumber = newRegister;
+    newMFTRegister.logicalBlockNumber = -1;
+    newMFTRegister.numberOfContiguosBlocks = -1;
+
+    // writing in the last position the pointer MFT Tuple
+    int w = write_tuple(realSector, newMFTRegister, offset);
+    if(w)
+      return -1;
+
+    offset = 0; // write on the first tuple
+    realSector = newRegisterSector;
+
+  }
+  error = read_sector(realSector, buffer);
   if(error)
     return -1;
-
-  if(TUPLE_ATRTYPE+16+i+offset > SECTOR_SIZE){
-    // create new tuple and ask for new register
-    
-  }
-
-  unsigned int aux;
+  
   // write AtributeType in the first tuple in the MFT
   int i;
   for (i = 0; i < 4; i++)
@@ -336,7 +398,7 @@ int write_on_last_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4t
     buffer[TUPLE_ATRTYPE+16+i+offset] = zero;
   }
 
-  int write_error = write_sector(sector, buffer);
+  int write_error = write_sector(realSector, buffer);
   if(write_error)
     return -1;
 
@@ -467,3 +529,78 @@ struct t2fs_record path_return_record(char* path)
 
 // funcao q vai receber um nome e um diretorio sector e acha o record com nome correspondente
 // fill_derectory ^^^
+
+
+// check if penultima posicao esta livre
+// int check_if_penultimate_Tuple_empty()
+
+int find_record_and_add_byteRecord(unsigned int sector, char *name)
+{
+  unsigned char bufferMFT[SECTOR_SIZE];
+  unsigned char bufferBD[SECTOR_SIZE];
+  struct t2fs_4tupla t;
+  struct t2fs_record record;
+  int error;
+  unsigned int s;
+  unsigned int MFT_sec = sector;
+
+// search at MFT for desired info
+  int i;
+  int j;
+  int k;
+  int p;
+  int r;
+  for(i = 0; i < 2; i++)
+  {// going through sectors
+    error = read_sector(MFT_sec + i, bufferMFT); // reading MFT register
+    if(error)
+      break;
+    for (j = 0; j < 16; j++)
+    { // going tuple by tuple in the sector
+      t = fill_MFT(bufferMFT, j);
+
+      if(t.atributeType == 0 || t.atributeType == -1){ // if end or non ecziste return error
+        // record = (struct t2fs_record)malloc(sizeof(struct t2fs_record));
+        return -1;
+      }
+      else if(t.atributeType == 2){ // if reached the end of the MFT register (the last tuple) go to the next register
+        i = 0;
+        MFT_sec = t.virtualBlockNumber * 2 + 4; // recebe o registro e o converte pro setor desse registro
+      }
+        
+      else{
+        for(k = 0; k < t.numberOfContiguosBlocks; k++)
+        { // reading BD
+          s = (unsigned int)((t.logicalBlockNumber + k) * 4); // find the sector of the respective blocks
+          for(p = 0; p<4; p++) // read the whole block
+          {
+            error = read_sector(s + p, bufferBD); // reading MFT register
+            if(error){
+              return -1;
+            }
+            for (r = 0; r < 4; r++)
+            { //each sector has max 4 records
+              record = fill_directory(bufferBD, r);
+              if(strcmp(name, record.name)==0){
+                record.bytesFileSize += 64;
+                int directory_start =  r * RECORD_SIZE;
+                printf("\nrecord.bytesFileSize: %u", record.bytesFileSize);
+
+                error = write_record_in_dir(s+p, directory_start, record);
+                if(error)
+                  return -1;
+                return 1;
+                
+              }
+            }
+          }
+        }
+      }
+
+    }
+  }
+
+
+
+  return -1;
+}
