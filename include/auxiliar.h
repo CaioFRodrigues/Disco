@@ -34,11 +34,30 @@
 #define BOOT_BLOCK_SIZE 4
 #define ROOT_MFT 6
 
+#define SIZE_of_MFT_blocos 2048
+#define SIZE_of_MFT_REGISTER_bytes 512
+#define SIZE_of_MFT_REGISTER_sector 2
+#define SIZE_of_4TUPLE 16
+#define TUPLES_PER_REGISTER 32
+#define ROOT_MFT_SECTOR 6
+#define ROOT_BD_SECTOR 8200
+#define SIZE_of_RECORD 64
+
 #define RECORD_TYPEVAL 0
 #define RECORD_NAME 1
 #define RECORD_BLOCK_FILESIZE 52
 #define RECORD_BYTES_FILESIZE 56
 #define RECORD_MFTNUMBER 60
+
+#define ATRIB_TYPE 0
+#define VBN 4
+#define LBN 8
+#define CONTIG_BLOCK 12
+
+#define TUPLE_ATRTYPE 0 
+#define TUPLE_VBN 4
+#define TUPLE_LBN 8
+#define TUPLE_NUMCONTIGBLOCK 12
 
 extern struct t2fs_bootBlock boot_block;
 
@@ -59,8 +78,6 @@ struct file_descriptor opened_files[MAX_OPENED_FILES];
 
 int number_dir_handles;
 FILE_DESCRIPTOR * opened_directories;
-
-
 //Ana
 //Initializes the boot block with the needed information
 int init();
@@ -83,8 +100,29 @@ void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* sou
 int first_free_dir_position();
 
 int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record);
+int first_free_file_position();
 
+int find_empty_MFT_reg();
 
+unsigned int take_sector_from_position(unsigned int record_position);
+
+unsigned int take_right_position(unsigned int record_position);
+
+unsigned int find_empty_record_info(unsigned int lbn, unsigned int contigBlock);
+
+int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record);
+
+int write_first_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t);
+
+int write_on_last_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t, unsigned int tupleNum);
+
+int clear_sector(unsigned int sector);
+
+int clear_block(int init_sector);
+
+struct t2fs_record path_return_record(char* path);
+
+int find_record_and_add_byteRecord(unsigned int sector, char *name);
 
 
 #endif

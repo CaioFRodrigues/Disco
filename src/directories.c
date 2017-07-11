@@ -90,7 +90,6 @@ struct t2fs_record fill_directory(unsigned char* buffer, int directory_number){
   return directory;
 }
 
-
 //Given a filename, returns THE SECTOR OF THE MFT it belongs
 //if the file was not found, returns -1
 int get_parent_dir_MFT_sector(char *filename){
