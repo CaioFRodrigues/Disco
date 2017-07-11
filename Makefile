@@ -25,8 +25,8 @@ cechin.o: $(SRC_DIR)cechin.c
 auxiliar.o: $(SRC_DIR)auxiliar.c
 	$(CC) -o $(LIB_DIR)auxiliar.o -c $(SRC_DIR)auxiliar.c $(CONDITIONS)
 
-t2fs.o: $(SRC_DIR)files.c
-	$(CC) -o $(LIB_DIR)t2fs.o -c $(SRC_DIR)files.c $(CONDITIONS)
+t2fs.o: $(SRC_DIR)t2fs.c
+	$(CC) -o $(LIB_DIR)t2fs.o -c $(SRC_DIR)t2fs.c $(CONDITIONS)
 
 conversion.o:
 	$(CC) -o $(LIB_DIR)conversion.o -c $(SRC_DIR)conversion.c $(CONDITIONS)

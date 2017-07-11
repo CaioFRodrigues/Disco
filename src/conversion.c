@@ -4,7 +4,7 @@
 // str must be hexadecimal string like "5432" for ex
 unsigned int swap_endianess(unsigned char *str)
 {
-    if(strlen(str) == 4){
+    if(strlen((char *) str) == 4){
         unsigned int num = (unsigned int)strtol((char *)str, NULL, 16);
 
         unsigned int swapped = ((num>>24)&0xff) | // move byte 3 to byte 0
@@ -26,7 +26,7 @@ unsigned int swap_endianess(unsigned char *str)
 // hex must be a simple 2 byte char like "54" for ex
 unsigned char conv_hex_to_string(unsigned char *hex)
 {
-    if(strlen(hex) == 2){
+    if(strlen((char *) hex) == 2){
         unsigned int c = (unsigned int)strtol((char *)hex, NULL, 16);
 
         return c;
