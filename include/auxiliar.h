@@ -34,10 +34,18 @@
 #define BOOT_BLOCK_SIZE 4
 #define ROOT_MFT 6
 
+
 #define TUPLE_ATRTYPE 0
 #define TUPLE_VBN 4
 #define TUPLE_LBN 8
 #define TUPLE_NUMCONTIGBLOCK 12
+
+#define RECORD_TYPEVAL 0
+#define RECORD_NAME 1
+#define RECORD_BLOCK_FILESIZE 52
+#define RECORD_BYTES_FILESIZE 56
+#define RECORD_MFTNUMBER 60
+
 
 extern struct t2fs_bootBlock boot_block;
 
@@ -56,15 +64,22 @@ typedef struct file_descriptor {
 int number_files_open;
 struct file_descriptor opened_files[MAX_OPENED_FILES];
 
+int number_dir_handles;
+FILE_DESCRIPTOR * opened_directories;
+
+
 //Ana
 //Initializes the boot block with the needed information
 int init();
 
 void initialize_open_files();
 
+void initialize_open_directories();
+
 int first_free_file_position();
 
-int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list);
+
+DWORD virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list);
 
 int find_byte_position_in_logical_block(MFT* mft,int bytes);
 
@@ -75,6 +90,12 @@ int write_first_tuple_MFT_and_set_0_second(unsigned int sector, int offset, stru
 int alocate_needed_blocks(int blocks_needed, MFT* mft, MFT* last_mft);
 
 int insert_in_sector(int sector, char* content, int start, int size);
+
+int first_free_dir_position();
+
+int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record);
+
+
 
 
 #endif

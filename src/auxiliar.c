@@ -47,6 +47,8 @@ int init(){
 
   initialize_open_files();
 
+  initialize_open_directories(); 
+
   return 0;
 }
 
@@ -59,6 +61,10 @@ void initialize_open_files(){
 
 }
 
+void initialize_open_directories(){
+  number_dir_handles = 0;
+  opened_directories = NULL;
+}
 
 //Caio
 //Gets first possible position from opened_files
@@ -74,8 +80,34 @@ int first_free_file_position(){
 
 }
 
+//Caio
+//Gets first possible position from opened_directories
+//Returns -1 if it failed
+int first_free_dir_position(){
+
+  //If there is no current directory, return 0 and allocates space
+  if (opened_directories == NULL){
+    opened_directories = malloc(sizeof(FILE_DESCRIPTOR));
+    return 0;
+  }
+  else{
+    //Goes through the current handles, and tries to find a valid one
+    for (int i = 0;i < number_dir_handles; i++){
+      if (opened_directories[i].is_valid)
+        return i;
+    }
+
+    //If there is none, it is needed to reallocate the size of opened_directories and return that new_position
+    opened_directories = realloc(opened_directories, sizeof(opened_directories) + sizeof(FILE_DESCRIPTOR));
+    number_dir_handles++;
+    return number_dir_handles;
+  }
+  return -1;
+}
+
 //Ana
-int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list){
+
+DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT* mft_list){
 
   MFT* mft_list_copy = mft_list;  
   DWORD currentVirtualBlockNumber, numberOfContiguosBlocks;
@@ -85,12 +117,12 @@ int virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list){
     currentVirtualBlockNumber = mft_list_copy->current_MFT.virtualBlockNumber;
     numberOfContiguosBlocks = mft_list_copy->current_MFT.numberOfContiguosBlocks;
     
-    if (numberOfContiguosBlocks + currentVirtualBlockNumber - 1 < current_virtual_block){ // If current_virtual_block is not mapped in this tuple
+    if (numberOfContiguosBlocks + currentVirtualBlockNumber - 1 < currentVirtualBlockNumber){ // If current_virtual_block is not mapped in this tuple
       mft_list_copy = mft_list_copy->next;
     }
     else{
       // currentVirtualBlockNumber maps to logicalBlockNumber, current_virtual_block = logicalBlockNumber + offset
-      return mft_list_copy->current_MFT.logicalBlockNumber + (current_virtual_block - currentVirtualBlockNumber);
+      return mft_list_copy->current_MFT.logicalBlockNumber + (currentVirtualBlockNumber - currentVirtualBlockNumber);
     }
   }
   return -1;
@@ -235,4 +267,53 @@ int alocate_needed_blocks(int blocks_needed, MFT* mft, MFT* last_mft){
 
   return 0;
 
+}
+
+//Arateus
+int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record)
+{
+  // unsigned int byte_sector = take_sector_from_empty_record_info(byte_pos);
+  // unsigned int byte_record_pos = take_record_position_in_dir(byte_pos);
+
+  unsigned char buffer[SECTOR_SIZE];
+
+  int error = read_sector(sector, buffer);
+  if(error)
+    return -1;
+
+  // write TypeVal
+  buffer[byte_pos] = record.TypeVal;
+  // write name
+  int i;
+  for (i = 0; i < MAX_FILE_NAME_SIZE; i++)
+  {
+    buffer[byte_pos+RECORD_NAME+i] = record.name[i];
+  }
+
+  unsigned int aux;
+  // write in buffer the blocksFileSize
+  for (i = 0; i < 4; i++)
+  {
+    aux = (record.blocksFileSize >> 8*i)&0xff;
+    buffer[byte_pos+RECORD_BLOCK_FILESIZE+i] = aux;
+  }
+  //write in buffer for the bytesFileSize
+  for (i = 0; i < 4; i++)
+  {
+    aux = (record.bytesFileSize >> 8*i)&0xff;
+    buffer[byte_pos+RECORD_BYTES_FILESIZE+i] = aux;
+  }
+  // write for the MFTNumber
+  for (i = 0; i < 4; i++)
+  {
+    aux = (record.MFTNumber >> 8*i)&0xff;
+    buffer[byte_pos+RECORD_MFTNUMBER+i] = aux;
+  }
+
+  // write buffer in sector
+  int write_error = write_sector(sector, buffer);
+  if(write_error)
+    return -1;
+
+  return 1;
 }
