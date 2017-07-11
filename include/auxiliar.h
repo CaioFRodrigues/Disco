@@ -34,6 +34,12 @@
 #define BOOT_BLOCK_SIZE 4
 #define ROOT_MFT 6
 
+#define RECORD_TYPEVAL 0
+#define RECORD_NAME 1
+#define RECORD_BLOCK_FILESIZE 52
+#define RECORD_BYTES_FILESIZE 56
+#define RECORD_MFTNUMBER 60
+
 extern struct t2fs_bootBlock boot_block;
 
 //File Descriptor - Holds the info of an opened file
@@ -66,6 +72,7 @@ int first_free_file_position();
 
 int first_free_dir_position();
 
+int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record);
 
 DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT* mft_list);
 

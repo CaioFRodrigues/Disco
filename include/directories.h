@@ -37,6 +37,9 @@ int get_MFTnumber_from_directory_datablock(int block, char *name, int mode);
 
 int get_parent_dir_MFT_sector(char *filename);
 
+int update_file_record_info(char * filename, struct t2fs_record record);
+
+int update_record_info(char *filename, struct t2fs_record record, int sector);
 
 #endif
 
