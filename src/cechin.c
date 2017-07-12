@@ -12,11 +12,11 @@
 #include "../include/directories.h"
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	init();
 
 
-return 0;
+
+	return 0;
 }
 

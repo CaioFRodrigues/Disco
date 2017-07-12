@@ -84,7 +84,11 @@ int init();
 
 void initialize_open_files();
 
+int is_file_open(char * file_name);
+
 void initialize_open_directories();
+
+int is_directory_open(char * file_name);
 
 int first_free_file_position();
 
@@ -132,5 +136,12 @@ struct t2fs_record path_return_record(char* path);
 
 int find_record_and_add_byteRecord(unsigned int sector, char *name);
 
+FILE_DESCRIPTOR create_descriptor (char * filename, int file_mft_sector);
+
+FILE2 open_file (char *filename, int mode);
+
+int allocate_handler(struct file_descriptor file_descriptor, int mode);
+
+int open_root_file();
 
 #endif

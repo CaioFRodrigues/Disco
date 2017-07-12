@@ -77,6 +77,23 @@ int first_free_file_position(){
 
 }
 
+//Returns whether the file is open or not
+int is_file_open(char * file_name){
+
+  for (int i = 0; i < MAX_OPENED_FILES; i++){
+
+    if(opened_files[i].is_valid){
+      if (strcmp(file_name, opened_files[i].file_path) == 0){
+        return 1;
+      }
+    }
+
+  }
+  
+  return 0;
+  
+}
+
  //Caio
 //Gets first possible position from opened_directories
 //Returns -1 if it failed
@@ -100,6 +117,20 @@ int first_free_dir_position(){
     return number_dir_handles;
   }
   return -1;
+}
+
+int is_directory_open(char * file_name){
+
+  for (int i = 0; i < number_dir_handles; i++){
+
+    if(opened_directories[i].is_valid && (strcmp(file_name, opened_directories[i].file_path) == 0))
+      return 1;
+
+  
+  }
+
+  return 0;
+  
 }
 
 DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT* mft_list){
@@ -770,4 +801,119 @@ int find_record_and_add_byteRecord(unsigned int sector, char *name)
 
 
   return -1;
+}
+
+
+
+//Given a filename and an mft_sector, creates a FILE_DESCRIPTOR with the info and returns it
+FILE_DESCRIPTOR create_descriptor (char * filename, int file_mft_sector){
+    
+  FILE_DESCRIPTOR file_descriptor;
+
+  //Initializes the file handler
+  file_descriptor.current_pointer = 0;
+
+  //Puts the name of the file on the handler
+  file_descriptor.file_path = strdup(filename);
+
+  //The loop ends with current_dir_sector at the MFT of the file
+  file_descriptor.first_MFT_tuple = file_mft_sector;
+
+  //Declares the file as valid
+  file_descriptor.is_valid = 1;
+
+  return file_descriptor;
+}
+
+//Opens a new directory or file, based on the mode
+//1 - opens file
+//2 - opens dir
+//returns the file handle if it has success, or 0
+//Returns -1 if it can't find the path to the file
+//Returns -2 if the file doesn't exist on the directory it is supposed to be in
+//Returns -3 if invalid mode was selected
+//Returns -4 if tried to open root as a file
+FILE2 open_file (char *filename, int mode){
+
+  if (mode != 1 && mode != 2){
+    return -3;
+  }
+
+
+  //If the file to be opened is the root file
+  if (strcmp(filename, "/") == 0){
+    
+    if (mode == 2){
+      int index = open_root_file();
+      return index;
+    }
+
+    else return -4;
+
+  }
+
+
+  
+  //isolated_filename is the filename without the subdirectories it is in
+  char *isolated_filename = (strrchr(filename, '/'));
+    isolated_filename = isolated_filename + 1;
+
+  int parent_sector = get_parent_dir_MFT_sector(filename);
+
+  //Couldn't reach the filename directory
+  if (parent_sector == -1)
+    return -1;
+
+
+  int file_mftnumber = get_MFTnumber_of_file_with_directory_number(isolated_filename, parent_sector, mode);
+
+  //File is not on the directory
+  if(file_mftnumber == -1)
+    return -2;
+  
+
+  int file_mft_sector = (file_mftnumber * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
+
+
+  FILE_DESCRIPTOR file_descriptor =  create_descriptor(filename, file_mft_sector);
+
+//Allocates file on opened_files or opened_directories
+  int index = allocate_handler(file_descriptor, mode);
+
+  
+
+  return index;
+
+}
+
+//Allocates a handler in opened_files or opened_directories, depending on mode
+//returns the handler it has allocated, or -1 if it failed
+int allocate_handler(struct file_descriptor file_descriptor, int mode){
+
+    int index = -1;
+
+
+  if (mode == 1){
+  //Allocates file
+    index = first_free_file_position();
+    opened_files[index] = file_descriptor;
+
+    
+  }
+  else if (mode == 2) {
+  //Allocates directory on opened_directories
+    index = first_free_dir_position();
+    opened_directories[index] = file_descriptor;
+
+  }
+
+  return index;
+
+}
+
+int open_root_file(){
+
+  FILE_DESCRIPTOR desc = create_descriptor ("/", ROOT_MFT);
+  int handle = allocate_handler(desc, 2);
+  return handle;
 }
