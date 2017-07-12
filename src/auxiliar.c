@@ -1058,10 +1058,133 @@ int generic_create(char *filename, DWORD type)
     return 1;
 }
 
+struct t2fs_record *find_record(char *filename, char *name)
+{
+  unsigned int MFT_sec = 6;
+  struct t2fs_record *record = NULL;
+  record = malloc(sizeof(struct t2fs_record));
 
-// unsigned int find_MFT_father()
-// {
+  char *filenamecopy = strdup(filename);
+  char *token;
+  token = strtok(filenamecopy, "/");
+  record = search_record_in_dir(MFT_sec, token);
+  if(record == NULL){
+      // printf("\npq ta dando essa bagaca?");
+      return NULL;
+  }
+  MFT_sec = record->MFTNumber*2 + 4;
+
+  while(strcmp(token, name) != 0)
+  {
+    token = strtok(NULL, "/");
+    // printf("\ntoloko: %s",token);
+    // printf("\nname: %s", name);
+    // printf("\nmft secs: %u", MFT_sec);
+    record = search_record_in_dir(MFT_sec, token); // MFT_of this directory
+    if(record == NULL){
+      // printf("\npq ta dando essa bagaca?");
+      return NULL;
+    }
+    MFT_sec = record->MFTNumber*2 + 4;
+    // printf("\nmft secs depois: %u", MFT_sec);
+    
+  }
+  // if(MFT_sec == -1)
+  //   return -1;
+
+  return record;
+}
+
+struct t2fs_record *search_record_in_dir(unsigned int sector, char *name)
+{
+  unsigned char bufferMFT[SECTOR_SIZE];
+  unsigned char bufferBD[SECTOR_SIZE];
+  struct t2fs_4tupla t;
+  struct t2fs_record *record = NULL;
+  record = malloc(sizeof(struct t2fs_record));
+  // struct t2fs_record *nullRecord = NULL;
+  // nullRecord = malloc(sizeof(struct t2fs_record));
+  int error;
+  unsigned int s;
+  unsigned int MFT_sec = sector;
+  // search at MFT for desired info
+  int i;
+  int j;
+  int k;
+  int p;
+  int r;
+  for(i = 0; i < 2; i++)
+  {// going through sectors
+    error = read_sector(MFT_sec + i, bufferMFT); // reading MFT register
+    if(error)
+      break;
+    for (j = 0; j < 16; j++)
+    { // going tuple by tuple in the sector
+      t = fill_MFT(bufferMFT, j);
+
+      if(t.atributeType == 0 || t.atributeType == -1){ // if end or non ecziste return error
+        // record = (struct t2fs_record)malloc(sizeof(struct t2fs_record));
+        return NULL;
+      }
+      else if(t.atributeType == 2){ // if reached the end of the MFT register (the last tuple) go to the next register
+        i = 0;
+        MFT_sec = t.virtualBlockNumber * 2 + 4; // recebe o registro e o converte pro setor desse registro
+        break;
+      }
+        
+      else{
+        for(k = 0; k < t.numberOfContiguosBlocks; k++)
+        { // reading BD
+          s = (unsigned int)((t.logicalBlockNumber + k) * 4); // find the sector of the respective blocks
+          for(p = 0; p<4; p++) // read the whole block
+          {
+            error = read_sector(s + p, bufferBD); // reading BD register
+            if(error){
+              return NULL;
+            }
+            for (r = 0; r < 4; r++)
+            { //each sector has max 4 records
+
+              *record = fill_directory(bufferBD, r);
+              // for(g = (int)strlen(record.name) + 1; g< MAX_FILE_NAME_SIZE; g++)
+              //   record.name[g] = 0x00;
+              if(strcmp(name, record->name)==0){
+                // int directory_start =  r * RECORD_SIZE;
+                // printf("\nrecord.bytesFileSize: %u", record.bytesFileSize);
+
+                // if(write_record_in_dir(s+p, directory_start, record) != 1)
+                //   return -1;
+
+                return record;
+                
+              }
+            }
+          }
+        }
+      }
+
+    }
+  }
 
 
-  
-// }
+  return NULL;
+
+}
+
+
+struct t2fs_record *path_return_record2(char* path)
+{
+  char *filenamecopy;
+  struct t2fs_record *record = NULL;
+  record = malloc(sizeof(struct t2fs_record));
+
+  filenamecopy = strdup(path);
+  char *isol_filename = (strrchr(filenamecopy, '/'));
+  char *isolated_filename = strtok(isol_filename, "/");
+
+  record = find_record(path, isolated_filename);
+  if(record == NULL)
+    return NULL; // NULL record
+
+  return record;
+}

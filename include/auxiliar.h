@@ -140,4 +140,10 @@ int find_father_record_and_add_byteRecord(char *filename, char *name);
 
 unsigned int search_record_in_dir_and_add(unsigned int sector, char *name);
 
+struct t2fs_record *find_record(char *filename, char *name);
+
+struct t2fs_record *search_record_in_dir(unsigned int sector, char *name);
+
+struct t2fs_record *path_return_record2(char* path);
+
 #endif
