@@ -42,52 +42,58 @@ int truncate2 (FILE2 handle){
   int current_pointer = opened_files[handle].current_pointer;
   MFT* mft = read_MFT(opened_files[handle].first_MFT_tuple);
 
-    // Initialize it with path_return_record
-  struct t2fs_record file_record;
+  int parent_MFT_sector = get_parent_dir_MFT_sector(opened_files[handle].file_path);
+  
+  MFT* current_mft = read_MFT(parent_MFT_sector);
+
+  struct t2fs_record file_record = search_file_in_directory_given_MFT( strrchr(opened_files[handle].file_path, '/') + 1, current_mft);
 
   file_record.blocksFileSize -= ceil(current_pointer/1024.0);
   file_record.bytesFileSize = current_pointer + 1 ;
+
+  update_file_record_info(opened_files[handle].file_path, file_record);
 
   // Write record to disk
 
   clear_file(mft, current_pointer);
   opened_files[handle].fileSizeBytes = current_pointer + 1;
+  return 0;
 }
 
 // Ana
 int delete2 (char *filename){
 
-  /*
-  * TODO:
-  *     Return -1 if filename is invalid (doesn't exist or not a file)
-  *     Check if file is opened
-  *       If it is, in the end of the process its file descriptor must be marked as invalid
-  */
+  int parent_MFT_sector = get_parent_dir_MFT_sector(opened_files[handle].file_path);
+  
+  MFT* current_mft = read_MFT(parent_MFT_sector);
+
+  struct t2fs_record file_record = search_file_in_directory_given_MFT( strrchr(filename, '/') + 1, current_mft);
 
   // Initialize it with path_return_record
-  struct t2fs_record file_record;
-
   file_record.TypeVal = 0;
+
+  update_file_record_info(filename, file_record);
 
   // Write record to disk
   
   MFT* mft; // Mock structure
   clear_file(mft, 0);
+  return 0;
 }
 
 int rmdir2(char* pathname){
 
-  /*
-  * TODO:
-  *     Return -1 if dir is invalid (doesn't exist or not a dir)
-  *     Check if dir is opened
-  *       If it is, in the end of the process its dir descriptor must be marked as invalid
-  */
+  int parent_MFT_sector = get_parent_dir_MFT_sector(opened_files[handle].file_path);
+  
+  MFT* current_mft = read_MFT(parent_MFT_sector);
+
+  struct t2fs_record file_record = search_file_in_directory_given_MFT( strrchr(pathname, '/') + 1, current_mft);
 
   // Initialize it with path_return_record
   struct t2fs_record file_record;
 
   file_record.TypeVal = 0;
+  update_file_record_info(pathname, file_record);
 
   // Write record to disk
   
