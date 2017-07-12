@@ -78,14 +78,12 @@ int read2(FILE2 handle, char * buffer, int size){
 
   int i =0;
 
-  // MFT* mft = read_MFT(opened_files[handle].first_MFT_tuple);
-  MFT* mft = read_MFT(12);  // For testing only
+  MFT* mft = read_MFT(opened_files[handle].first_MFT_tuple);
 
   unsigned char sector_buffer[SECTOR_SIZE]; // Buffer used to read from sector
   buffer[size] = '\0';
 
-  // int current_pointer = opened_files[handle].current_pointer
-  int current_pointer = 0;   // For testing only
+  int current_pointer = opened_files[handle].current_pointer;
 
   int bytes_left_to_copy = size;
 
@@ -188,7 +186,7 @@ DIR2 opendir(char *filename){
 
 }
 
-
+// Arateus
 FILE2 create2(char *filename)
 {
   FILE2 handle = 0;
@@ -202,6 +200,7 @@ FILE2 create2(char *filename)
   return handle;
 }
 
+// Arateus
 int mkdir2 (char *pathname)
 {
   // DIR2 handle = 0;
