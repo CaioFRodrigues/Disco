@@ -784,15 +784,15 @@ int find_father_record_and_add_byteRecord(char *filename, char *name)
   while(strcmp(token, name) != 0)
   {
     token = strtok(NULL, "/");
-    printf("\ntoloko: %s",token);
-    printf("\nname: %s", name);
-    printf("\nmft secs: %u", MFT_sec);
+    // printf("\ntoloko: %s",token);
+    // printf("\nname: %s", name);
+    // printf("\nmft secs: %u", MFT_sec);
     MFT_sec = search_record_in_dir_and_add(MFT_sec, token); // MFT_of this directory
     if(MFT_sec == -1){
-      printf("\npq ta dando essa bagaca?");
+      // printf("\npq ta dando essa bagaca?");
       return -1;
     }
-    printf("\nmft secs depois: %u", MFT_sec);
+    // printf("\nmft secs depois: %u", MFT_sec);
     
   }
   // if(MFT_sec == -1)
@@ -977,7 +977,7 @@ int generic_create(char *filename, DWORD type)
   if(MFT_father == 4)
     return -1; // wrong path
 
-  printf("\nMFT_father: %u\n", MFT_father);
+  // printf("\nMFT_father: %u\n", MFT_father);
 
   token = strtok(filenamecopy, "/");
   int cont = -1;
@@ -1002,13 +1002,13 @@ int generic_create(char *filename, DWORD type)
 
   // check if root
   // if tokenRecord == isolated filename, it means that is on Root dir
-  printf("\ntoken: %s\nisolated: %s",tokenRecord, isolated_filename);
+  // printf("\ntoken: %s\nisolated: %s",tokenRecord, isolated_filename);
   if(strcmp(tokenRecord, isolated_filename) != 0)
   {
     if(MFT_father >= 6){
       // this shall add 64bytes at the record father, cuz it's adding a new arq, that is 64 bytes
         if(find_father_record_and_add_byteRecord(filename, tokenRecord) != 1){
-          printf("\nTA CRASHANO AQUI");
+          // printf("\nTA CRASHANO AQUI");
             return -1;
         }
         
@@ -1027,11 +1027,13 @@ int generic_create(char *filename, DWORD type)
 
   unsigned int lastTPositionSector = MFT_father;
   lastT = find_last_tuple_MFT_register(lastTPositionSector); // last tuple with usable info, not type 0
-  int lastTPosition = 0;
-  lastTPosition = find_position_last_tuple_MFT_register(lastTPositionSector);
-  printf("\nlast T position sector: %u", lastTPositionSector);
-  printf("\nLastT.atrType: %u\nLast.logicalBlockNumber: %u", lastT.atributeType, lastT.logicalBlockNumber);
-  printf("\nlast T position: %u", lastTPosition);
+  unsigned int lastTPosition = 0;
+  // printf("\nlast T position A: %u", lastTPosition);
+  lastTPosition = (unsigned int)find_position_last_tuple_MFT_register(lastTPositionSector);
+  // printf("\nlast T position D: %u", lastTPosition);
+  // printf("\nlast T position sector: %u", lastTPositionSector);
+  // printf("\nLastT.atrType: %u\nLast.logicalBlockNumber: %u", lastT.atributeType, lastT.logicalBlockNumber);
+  
   
   // this shall go to the last tuple in the sequence of registers if necessary
   // while(lastT.atributeType == 2)

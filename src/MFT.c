@@ -94,19 +94,15 @@ int read_sector_as_MFT(int sector, MFT** list){
 struct t2fs_4tupla fill_MFT(unsigned char* buffer, int MFT_4tupla_number){
   //Struct where info will be saved
   struct t2fs_4tupla MFT_4tupla;
-  MFT_4tupla.atributeType = 0x00000000;
-  MFT_4tupla.virtualBlockNumber = 0x00000000;
-  MFT_4tupla.logicalBlockNumber = 0x00000000;
-  MFT_4tupla.numberOfContiguosBlocks = 0x00000000;
 
   //Byte where the the tupla starts on the buffer
   int MFT_4tupla_position = MFT_4TUPLA_SIZE * MFT_4tupla_number;
 
   //Gets the information translating the bytes to big_endian and to int
-  MFT_4tupla.atributeType = conv_string_to_hex(buffer, (unsigned int)(ATTRIBUTE_TYPE_START + MFT_4tupla_position), 4);
-  MFT_4tupla.virtualBlockNumber = conv_string_to_hex(buffer, (unsigned int)(VIRTUAL_BLOCK_NUMBER_START + MFT_4tupla_position), 4);
-  MFT_4tupla.logicalBlockNumber = conv_string_to_hex(buffer, (unsigned int)(LOGICAL_BLOCK_NUMBER_START + MFT_4tupla_position), 4);
-  MFT_4tupla.numberOfContiguosBlocks = conv_string_to_hex(buffer, (unsigned int)(NUMBER_OF_CONTIGUOS_BLOCKS_START + MFT_4tupla_position), 4);
+  MFT_4tupla.atributeType = swap_local_endianess(buffer, ATTRIBUTE_TYPE_START + MFT_4tupla_position);
+  MFT_4tupla.virtualBlockNumber = swap_local_endianess(buffer, VIRTUAL_BLOCK_NUMBER_START + MFT_4tupla_position);
+  MFT_4tupla.logicalBlockNumber = swap_local_endianess(buffer, LOGICAL_BLOCK_NUMBER_START + MFT_4tupla_position);
+  MFT_4tupla.numberOfContiguosBlocks = swap_local_endianess(buffer, NUMBER_OF_CONTIGUOS_BLOCKS_START + MFT_4tupla_position);
 
   return MFT_4tupla;
 
@@ -227,7 +223,7 @@ int find_position_last_tuple_MFT_register(unsigned int sec)
   // struct t2fs_4tupla lastTuple;
   unsigned char buffer[SECTOR_SIZE];
   unsigned int sector = sec;
-  unsigned int answer = 0;
+  int answer = 0;
   
   int j = 0;
   int i = 0;
@@ -241,7 +237,7 @@ int find_position_last_tuple_MFT_register(unsigned int sec)
     {
       actualTuple = fill_MFT(buffer, j);
       if(actualTuple.atributeType == 0){
-        printf("\nposition last tuple: %d", ((j - 1) + (i*16)));
+        // printf("\nposition last tuple: %d", ((j - 1) + (i*16)));
         answer = ((j - 1) + (i*16));
         return answer;
       }
