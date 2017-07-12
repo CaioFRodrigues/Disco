@@ -364,7 +364,7 @@ int truncate2 (FILE2 handle){
 // Ana
 int delete2 (char *filename){
 
-  int parent_MFT_sector = get_parent_dir_MFT_sector(opened_files[handle].file_path);
+  int parent_MFT_sector = get_parent_dir_MFT_sector(filename);
   
   MFT* current_mft = read_MFT(parent_MFT_sector);
 
@@ -384,14 +384,11 @@ int delete2 (char *filename){
 
 int rmdir2(char* pathname){
 
-  int parent_MFT_sector = get_parent_dir_MFT_sector(opened_files[handle].file_path);
+  int parent_MFT_sector = get_parent_dir_MFT_sector(pathname);
   
   MFT* current_mft = read_MFT(parent_MFT_sector);
 
   struct t2fs_record file_record = search_file_in_directory_given_MFT( strrchr(pathname, '/') + 1, current_mft);
-
-  // Initialize it with path_return_record
-  struct t2fs_record file_record;
 
   file_record.TypeVal = 0;
   update_file_record_info(pathname, file_record);
@@ -400,5 +397,7 @@ int rmdir2(char* pathname){
   
   MFT* mft; // Mock structure
   clear_file(mft, 0);
+
+  return 0;
 
 }
