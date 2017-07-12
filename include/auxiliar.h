@@ -92,12 +92,6 @@ int is_directory_open(char * file_name);
 
 int first_free_file_position();
 
-DWORD virtual_block_to_logical_block(DWORD current_pointer, MFT* mft_list);
-
-int find_byte_position_in_logical_block(MFT* mft,int bytes);
-
-char* append_buffers( char* final_buffer, char* temp_buffer );
-
 void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* source, char* destination);
 
 DWORD virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list);
@@ -150,5 +144,6 @@ FILE2 open_file (char *filename, int mode);
 int allocate_handler(struct file_descriptor file_descriptor, int mode);
 
 int open_root_file();
+int clear_file(MFT* mft, int current_pointer);
 
 #endif

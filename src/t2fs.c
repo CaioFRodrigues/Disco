@@ -174,7 +174,7 @@ FILE2 open2 (char *filename){
 //Returns -1 if the subdirectory the file is in can't be reached
 //Returns -2 if the file can't be found on its subdirectory
 //Returns -3 if the file is already opened
-DIR2 opendir(char *filename){
+DIR2 opendir2(char *filename){
 
 
 
@@ -332,4 +332,73 @@ int write2(FILE2 handle, char *buffer, int size)
   }
   // Function didn't write everything to the disk
   return -1;
+}
+
+// Ana
+int truncate2 (FILE2 handle){
+  
+  if (!opened_files[handle].is_valid)
+    return -1;
+
+  int current_pointer = opened_files[handle].current_pointer;
+  MFT* mft = read_MFT(opened_files[handle].first_MFT_tuple);
+
+  int parent_MFT_sector = get_parent_dir_MFT_sector(opened_files[handle].file_path);
+  
+  MFT* current_mft = read_MFT(parent_MFT_sector);
+
+  struct t2fs_record file_record = search_file_in_directory_given_MFT( strrchr(opened_files[handle].file_path, '/') + 1, current_mft);
+
+  file_record.blocksFileSize -= ceil(current_pointer/1024.0);
+  file_record.bytesFileSize = current_pointer + 1 ;
+
+  update_file_record_info(opened_files[handle].file_path, file_record);
+
+  // Write record to disk
+
+  clear_file(mft, current_pointer);
+  opened_files[handle].fileSizeBytes = current_pointer + 1;
+  return 0;
+}
+
+// Ana
+int delete2 (char *filename){
+
+  int parent_MFT_sector = get_parent_dir_MFT_sector(opened_files[handle].file_path);
+  
+  MFT* current_mft = read_MFT(parent_MFT_sector);
+
+  struct t2fs_record file_record = search_file_in_directory_given_MFT( strrchr(filename, '/') + 1, current_mft);
+
+  // Initialize it with path_return_record
+  file_record.TypeVal = 0;
+
+  update_file_record_info(filename, file_record);
+
+  // Write record to disk
+  
+  MFT* mft; // Mock structure
+  clear_file(mft, 0);
+  return 0;
+}
+
+int rmdir2(char* pathname){
+
+  int parent_MFT_sector = get_parent_dir_MFT_sector(opened_files[handle].file_path);
+  
+  MFT* current_mft = read_MFT(parent_MFT_sector);
+
+  struct t2fs_record file_record = search_file_in_directory_given_MFT( strrchr(pathname, '/') + 1, current_mft);
+
+  // Initialize it with path_return_record
+  struct t2fs_record file_record;
+
+  file_record.TypeVal = 0;
+  update_file_record_info(pathname, file_record);
+
+  // Write record to disk
+  
+  MFT* mft; // Mock structure
+  clear_file(mft, 0);
+
 }

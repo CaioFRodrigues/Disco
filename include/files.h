@@ -11,4 +11,12 @@
 *
 *   Versão: 16.2
 */
+<<<<<<< HEAD
 int read_bytes_from_sector(int sector, int num_bytes);
+=======
+#include "../include/auxiliar.h"
+#include "../include/MFT.h"
+#include "../include/MFT_list.h"
+
+int clear_file(MFT* mft, int current_pointer);
+>>>>>>> delete

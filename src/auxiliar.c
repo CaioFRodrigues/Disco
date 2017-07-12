@@ -166,8 +166,8 @@ int find_byte_position_in_logical_sector(MFT* mft, int bytes){
   
   int num_sectors, num_blocks, offsets_bytes;
 
-  num_sectors = ceil(bytes/256);
-  num_blocks = ceil(num_sectors/boot_block.MFTBlocksSize);
+  num_sectors = ceil(bytes/256.0);
+  num_blocks = ceil(bytes/1024.0);
 
   offsets_bytes = bytes - (num_blocks * num_sectors * 256);
   
@@ -641,6 +641,7 @@ int clear_block(int init_sector){
 // percorrer a MFT
 
 
+// Arateus
 //funcao recebe um path e retorna um record com o arquivo ou dir
 struct t2fs_record path_return_record(char* path)
 {
@@ -1209,4 +1210,51 @@ int open_root_file(){
   FILE_DESCRIPTOR desc = create_descriptor ("/", ROOT_MFT);
   int handle = allocate_handler(desc, 2);
   return handle;
+}
+// Ana
+int clear_file(MFT* mft, int current_pointer){
+
+  int pointer_block = current_pointer/1024;
+
+  int i =0;
+  while (mft != NULL){
+    int passed_blocks = mft->current_MFT.virtualBlockNumber;
+    int number_blocks = mft->current_MFT.numberOfContiguosBlocks;
+    int first_block = mft->current_MFT.logicalBlockNumber;
+
+    // MFT MUST BE CHANGED
+    if (passed_blocks+number_blocks-1 >= pointer_block){
+      
+      if (passed_blocks <= pointer_block){
+        // Current_pointer is in this MFT
+        int blocks_left = number_blocks;
+        for (i=0; i<number_blocks; i++){
+          if (i > pointer_block - passed_blocks){
+            setBitmap2(first_block + i, 0);
+            blocks_left--;
+          }
+        }
+
+        mft->current_MFT.numberOfContiguosBlocks = blocks_left;
+        write_first_tuple_MFT_and_set_0_second(mft->sector, mft->offset*16, mft->current_MFT);
+
+      }
+
+      else{
+        // MFT must be invalidated
+        for (i=0; i<number_blocks; i++){
+
+          if (passed_blocks + i > pointer_block){
+            setBitmap2(first_block + i, 0);
+          }
+          
+          mft->current_MFT.atributeType = 0xffff;
+          write_first_tuple_MFT_and_set_0_second(mft->sector, mft->offset*16, mft->current_MFT);
+
+        }
+      }
+    }
+    mft = mft->next;
+  }	
+  return 0;
 }

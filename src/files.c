@@ -15,4 +15,22 @@
 #include <stdio.h>
 #include <string.h>
 #include "../include/apidisk.h"
+#include "../include/bitmap2.h"
+#include "../include/auxiliar.h"
 #include "../include/files.h"
+#include "../include/t2fs.h"
+#include "../include/MFT_list.h"
+#include "../include/MFT.h"
+#include "../include/directories.h"
+
+#define ATRIB_TYPE 0
+#define VBN 4
+#define LBN 8
+#define CONTIG_BLOCK 12
+
+#define TUPLE_ATRTYPE 0 
+#define TUPLE_VBN 4
+#define TUPLE_LBN 8
+#define TUPLE_NUMCONTIGBLOCK 12
+
+
