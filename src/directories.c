@@ -220,14 +220,13 @@ struct t2fs_record search_file_in_directory(char *name, int dir_sector){
   	for(int current_record = 0; current_record < RECORDS_PER_SECTOR; current_record++){
   		//Gets the info of the current record
   		struct t2fs_record current_file = fill_directory(buffer, current_record);
-		printf ("CURRENT_FILE: %02X\n", current_file.TypeVal);
+
 		//checks if it is valid  	
   		if (current_file.TypeVal == 1 || current_file.TypeVal == 2){
   			//check if the name and type are the same
-  			printf ("FOUND SOMETHING VALID\n");
-  			printf ("%s %s", name, current_file.name);
+
 	  		if(strcmp(current_file.name, name) == 0){
-	  			printf ("SOMETHING IS HAPPENING");
+
 	  			return current_file;
 
 	  		}

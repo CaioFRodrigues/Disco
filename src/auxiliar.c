@@ -290,6 +290,7 @@ int alocate_needed_blocks(int blocks_needed, MFT* mft, MFT* last_mft){
   for (n=0; n<blocks_needed;n++){
 
     int new_block = searchBitmap2(0);
+
     if (setBitmap2(new_block, 1) != 0){
       return -1;
     }
@@ -305,6 +306,7 @@ int alocate_needed_blocks(int blocks_needed, MFT* mft, MFT* last_mft){
       new_tuple.logicalBlockNumber = new_block;
       new_tuple.virtualBlockNumber = last_mft->current_MFT.virtualBlockNumber + last_mft->current_MFT.numberOfContiguosBlocks;
       new_tuple.numberOfContiguosBlocks = 1;
+      printf("***%d***", last_mft->sector);
 
       // Treat situation in which sector and/or register is full
       write_first_tuple_MFT_and_set_0_second(last_mft->sector, (last_mft->offset+1)*16, new_tuple);
@@ -887,7 +889,6 @@ unsigned int search_record_in_dir_and_add(unsigned int sector, char *name)
               if(strcmp(name, record.name)==0){
                 record.bytesFileSize = record.bytesFileSize + 64;
                 int directory_start =  r * RECORD_SIZE;
-                printf("\nrecord.bytesFileSize: %u", record.bytesFileSize);
 
                 if(write_record_in_dir(s+p, directory_start, record) != 1)
                   return -1;
