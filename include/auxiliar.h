@@ -132,5 +132,10 @@ struct t2fs_record path_return_record(char* path);
 
 int find_record_and_add_byteRecord(unsigned int sector, char *name);
 
+int check_recordPosition_valid(unsigned int record_position, unsigned int writeBlock, struct t2fs_4tupla lastT, unsigned int lastTPositionSector, unsigned int lastTPosition);
+
+int write_new_arq(unsigned int record_position, char *isolated_filename, unsigned int writeBlock, DWORD type);
+
+int generic_create(char *filename, DWORD type);
 
 #endif

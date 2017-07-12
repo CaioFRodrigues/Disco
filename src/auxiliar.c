@@ -771,3 +771,173 @@ int find_record_and_add_byteRecord(unsigned int sector, char *name)
 
   return -1;
 }
+
+
+int check_recordPosition_valid(unsigned int record_position, unsigned int writeBlock, struct t2fs_4tupla lastT, unsigned int lastTPositionSector, unsigned int lastTPosition)
+{
+  unsigned int wBlock = writeBlock;
+  if(record_position == -1) // if didn't find an empty position -> dir is full
+  {
+    // search for the first empty block if contigous
+      if(getBitmap2(lastT.logicalBlockNumber + 1) == 1) // if next position is allocated
+      { // alloc new tuple
+        struct t2fs_4tupla newTuple;
+        newTuple.atributeType = 1;
+        newTuple.logicalBlockNumber = (unsigned int)searchBitmap2(0);
+        setBitmap2(newTuple.logicalBlockNumber, 1);
+        newTuple.numberOfContiguosBlocks = 1;
+        newTuple.virtualBlockNumber = lastT.virtualBlockNumber + lastT.virtualBlockNumber;
+
+        if(write_on_last_tuple_MFT_and_set_0_second(lastTPositionSector, newTuple, lastTPosition+1) != 1) // write newTuple with new info in the next position
+            return -1;
+        wBlock = newTuple.logicalBlockNumber;
+
+      }
+      else if(getBitmap2(lastT.logicalBlockNumber + 1) == 0)// if next block is empty
+      {
+        lastT.numberOfContiguosBlocks = lastT.numberOfContiguosBlocks + 1;
+        setBitmap2(lastT.logicalBlockNumber + 1, 1);
+        if(write_on_last_tuple_MFT_and_set_0_second(lastTPositionSector, lastT, lastTPosition) != 1) // sobrescribe lastTuple
+          return -1;
+        wBlock = lastT.logicalBlockNumber + 1;
+      }
+      else 
+        return -1;
+
+  }
+
+  return wBlock;
+}
+
+// write and set the new sector in the BD
+// if it works returns 1, else return error value = -1
+int write_new_arq(unsigned int record_position, char *isolated_filename, unsigned int writeBlock, DWORD type)
+{
+  unsigned int empty_record_sector_aux = take_sector_from_position(record_position);
+  unsigned int empty_record_pos_aux = take_right_position(record_position);
+  unsigned int empty_MFTRegister = (unsigned int)find_empty_MFT_reg();
+  unsigned int empty_MFTsector = 4 + 2*empty_MFTRegister;
+  
+  struct t2fs_record record;
+  record.TypeVal = type;
+  record.MFTNumber = empty_MFTRegister;
+  for(int i; i<MAX_FILE_NAME_SIZE; i++)
+    record.name[i] = 0x00;
+  memcpy(record.name, isolated_filename, strlen(isolated_filename)+1); // copying pathname to record
+  record.blocksFileSize = 1;
+  record.bytesFileSize = 0;
+
+  struct t2fs_4tupla emptyTupla;
+  emptyTupla.atributeType = 1;
+  emptyTupla.virtualBlockNumber = 0;
+  emptyTupla.numberOfContiguosBlocks = 1;
+  unsigned int empty_block = (unsigned int)searchBitmap2(0);
+  emptyTupla.logicalBlockNumber = empty_block;
+  
+  if(setBitmap2(empty_block, 1))
+    return -1;
+
+  if(clear_block(empty_block) != 1)
+    return -1;
+
+  //write empty tuple in the MFT
+  if(write_first_tuple_MFT_and_set_0_second(empty_MFTsector, 0, emptyTupla) != 1)
+    return -1;
+  
+  //write the record in the dir
+  if(write_record_in_dir(writeBlock*4 + empty_record_sector_aux, empty_record_pos_aux, record) != 1)
+    return -1;
+
+
+  return 1;
+
+}
+
+int generic_create(char *filename, DWORD type)
+{
+  char *token, *filenamecopy, *fatherRecord, *tokenRecord;
+
+  // unsigned int MFT_fatherDirSector = 6; // initial father sector is root sector
+
+  char *copyName = strdup(filename);
+  char *isol_fn = (strrchr(copyName, '/'));
+  char *isolated_filename = strtok(isol_fn, "/");
+  // isolated_filename = isolated_filename + 1;
+
+  filenamecopy = strdup(filename);
+  fatherRecord = strdup(filename);
+
+  // tokenRecord = strtok(fatherRecord, "/");
+
+  unsigned int MFT_father = (unsigned int)get_parent_dir_MFT_sector(filename);
+  printf("\nMFT_father: %u\n", MFT_father);
+
+  token = strtok(filenamecopy, "/");
+  int cont = -1;
+  while(strcmp(token, isolated_filename) != 0)
+  {
+    // printf("\nToken: %s", token);
+    // printf("\ntokenRecord: %s", tokenRecord);
+    token = strtok(NULL, "/");
+    cont++;
+    // if(strcmp(token,isolated_filename) == 0)
+    //   break;
+    // tokenRecord = strtok(fatherRecord, "/");
+  }
+  printf("\nchegou aqui :O");
+
+  tokenRecord = strtok(fatherRecord, "/");
+  for (int o = 0; o < cont; o++)
+  {
+    tokenRecord = strtok(NULL, "/");
+  }
+  // ATE AQUI TA OKAY
+
+  // check if root
+  // if tokenRecord == isolated filename, it means that is on Root dir
+  if(strcmp(tokenRecord, isolated_filename) != 0)
+  {
+    if(MFT_father >= 6){
+      // this shall add 64bytes at the record father, cuz it's adding a new arq, that is 64 bytes
+      if(find_record_and_add_byteRecord(MFT_father, tokenRecord) != 1)
+          return -1;
+    }
+    else
+    {
+      // if get_parent_dir_MFT_sector(filename) crashes
+      return -1;
+    }
+  }
+
+  // 
+  // now gotta search for the last usable tuple to find the proper block to add info
+  struct t2fs_4tupla lastT; // the last tuple of the MFT_
+
+  unsigned int lastTPositionSector = MFT_father;
+  lastT = find_last_tuple_MFT_register(lastTPositionSector); // last tuple with usable info, not type 0
+  unsigned int lastTPosition = (unsigned int)find_position_last_tuple_MFT_register(lastTPositionSector);
+  // printf("\nlast position sector: %u", lastTPositionSector);
+  // printf("\nlast position: %u", lastTPosition);
+  
+  // this shall go to the last tuple in the sequence of registers if necessary
+  while(lastT.atributeType == 2)
+  {
+    lastTPositionSector = lastT.virtualBlockNumber*2 + 4;
+    lastT = find_last_tuple_MFT_register(lastTPositionSector); // find last not 0 atributeType tuple
+    lastTPosition = find_position_last_tuple_MFT_register(lastTPositionSector);
+  }
+
+  // now gotta find the position of an empty record in the dir
+  unsigned int empty_record_position = find_empty_record_info(lastT.logicalBlockNumber, lastT.numberOfContiguosBlocks);
+  unsigned int writeBlock = lastT.logicalBlockNumber; // this is the right block position
+  writeBlock = check_recordPosition_valid(empty_record_position, writeBlock, lastT, lastTPositionSector, lastTPosition);
+  if(empty_record_position == -1)
+  {
+    empty_record_position = 0;
+  }
+
+  if(write_new_arq(empty_record_position, isolated_filename, writeBlock, type) != 1)
+    return -1;
+  else
+    return 1;
+}

@@ -95,15 +95,12 @@ struct t2fs_record fill_directory(unsigned char* buffer, int directory_number){
 //Given a filename, returns THE SECTOR OF THE MFT it belongs
 //if the file was not found, returns -1
 int get_parent_dir_MFT_sector(char *filename){
-	FILE2 open2 (char *filename);
- 	
 	char *token, *filenamecopy;
 
 	filenamecopy = strdup(filename);
 	
 	token = strtok(filenamecopy, "/");
 	
-
 	//Initializes the root MFT
 	int current_dir_sector = ROOT_MFT;
 	
@@ -122,14 +119,13 @@ int get_parent_dir_MFT_sector(char *filename){
 
 		//Recalculates the current_dir_sector
 		current_dir_sector = (current_dir_sector * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
-		printf ("THIS IS NOW:%d", current_dir_sector);
+		// printf ("THIS IS NOW:%d", current_dir_sector);
+		token = strtok(NULL, "/");
 	}
 
 	free(filenamecopy);
 	
 	return current_dir_sector;
-
-
 
 }
 

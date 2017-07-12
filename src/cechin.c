@@ -16,7 +16,16 @@ int main(int argc, char *argv[])
 {
 	init();
 
+	// unsigned int arqs;
+	// create2("/file3");
+	// create2("/file4");
+	// create2("/file5");
+	mkdir2("/arateus");
+	mkdir2("/arateus/eh");
+	mkdir2("/arateus/eh/deuso");
 
-return 0;
+
+
+	return 0;
 }
 
