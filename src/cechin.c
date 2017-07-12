@@ -12,8 +12,7 @@
 #include "../include/directories.h"
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	init();
 
 	// unsigned int arqs;
@@ -26,7 +25,6 @@ int main(int argc, char *argv[])
 	// mkdir2("/arateus/eh/deuso/metaleiro");
 	mkdir2("/MyUltimateIsReady");
 	create2("/MyUltimateIsReady/takeThis");
-
 
 
 	return 0;

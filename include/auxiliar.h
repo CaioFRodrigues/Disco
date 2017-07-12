@@ -84,7 +84,11 @@ int init();
 
 void initialize_open_files();
 
+int is_file_open(char * file_name);
+
 void initialize_open_directories();
+
+int is_directory_open(char * file_name);
 
 int first_free_file_position();
 
@@ -139,5 +143,12 @@ int generic_create(char *filename, DWORD type);
 int find_father_record_and_add_byteRecord(char *filename, char *name);
 
 unsigned int search_record_in_dir_and_add(unsigned int sector, char *name);
+FILE_DESCRIPTOR create_descriptor (char * filename, int file_mft_sector);
+
+FILE2 open_file (char *filename, int mode);
+
+int allocate_handler(struct file_descriptor file_descriptor, int mode);
+
+int open_root_file();
 
 #endif
