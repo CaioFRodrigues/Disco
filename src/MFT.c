@@ -94,15 +94,19 @@ int read_sector_as_MFT(int sector, MFT** list){
 struct t2fs_4tupla fill_MFT(unsigned char* buffer, int MFT_4tupla_number){
   //Struct where info will be saved
   struct t2fs_4tupla MFT_4tupla;
+  MFT_4tupla.atributeType = 0x00000000;
+  MFT_4tupla.virtualBlockNumber = 0x00000000;
+  MFT_4tupla.logicalBlockNumber = 0x00000000;
+  MFT_4tupla.numberOfContiguosBlocks = 0x00000000;
 
   //Byte where the the tupla starts on the buffer
   int MFT_4tupla_position = MFT_4TUPLA_SIZE * MFT_4tupla_number;
 
   //Gets the information translating the bytes to big_endian and to int
-  MFT_4tupla.atributeType = swap_local_endianess(buffer,  ATTRIBUTE_TYPE_START + MFT_4tupla_position);
-  MFT_4tupla.virtualBlockNumber = swap_local_endianess(buffer, VIRTUAL_BLOCK_NUMBER_START + MFT_4tupla_position);
-  MFT_4tupla.logicalBlockNumber = swap_local_endianess(buffer, LOGICAL_BLOCK_NUMBER_START + MFT_4tupla_position);
-  MFT_4tupla.numberOfContiguosBlocks = swap_local_endianess(buffer, NUMBER_OF_CONTIGUOS_BLOCKS_START + MFT_4tupla_position);
+  MFT_4tupla.atributeType = conv_string_to_hex(buffer, (unsigned int)(ATTRIBUTE_TYPE_START + MFT_4tupla_position), 4);
+  MFT_4tupla.virtualBlockNumber = conv_string_to_hex(buffer, (unsigned int)(VIRTUAL_BLOCK_NUMBER_START + MFT_4tupla_position), 4);
+  MFT_4tupla.logicalBlockNumber = conv_string_to_hex(buffer, (unsigned int)(LOGICAL_BLOCK_NUMBER_START + MFT_4tupla_position), 4);
+  MFT_4tupla.numberOfContiguosBlocks = conv_string_to_hex(buffer, (unsigned int)(NUMBER_OF_CONTIGUOS_BLOCKS_START + MFT_4tupla_position), 4);
 
   return MFT_4tupla;
 
@@ -185,11 +189,12 @@ int get_MFTnumber_of_file_with_directory_number(char * filename, int directory_M
 // sector: sector where the register is
 // returns the last tuple
 // couldn't make an error except 
-struct t2fs_4tupla find_last_tuple_MFT_register(unsigned int sector)
+struct t2fs_4tupla find_last_tuple_MFT_register(unsigned int sec)
 {
   struct t2fs_4tupla actualTuple; 
   struct t2fs_4tupla lastTuple;
   unsigned char buffer[SECTOR_SIZE];
+  unsigned int sector = sec;
   
   int j;
   int i;
@@ -204,6 +209,11 @@ struct t2fs_4tupla find_last_tuple_MFT_register(unsigned int sector)
       actualTuple = fill_MFT(buffer, j);
       if(actualTuple.atributeType == 0)
         return lastTuple;
+      else if(actualTuple.atributeType == 2){
+        i = 0;
+        sector = actualTuple.virtualBlockNumber*2 + 4;
+        break;
+      }
 
       lastTuple = fill_MFT(buffer, j);
     }
@@ -211,28 +221,39 @@ struct t2fs_4tupla find_last_tuple_MFT_register(unsigned int sector)
   return lastTuple;
 }
 
-int find_position_last_tuple_MFT_register(unsigned int sector)
+int find_position_last_tuple_MFT_register(unsigned int sec)
 {
   struct t2fs_4tupla actualTuple; 
   // struct t2fs_4tupla lastTuple;
   unsigned char buffer[SECTOR_SIZE];
+  unsigned int sector = sec;
+  unsigned int answer = 0;
   
-  int j;
-  int i;
+  int j = 0;
+  int i = 0;
   for (i = 0; i < 2; i++)
   {
-    if(read_sector(sector+i, buffer))
+    if(read_sector(sector + (unsigned int)i, buffer))
       return -1;
       
     // lastTuple = fill_MFT(buffer, 0);
     for (j = 1; j < 16; j++)
     {
       actualTuple = fill_MFT(buffer, j);
-      if(actualTuple.atributeType == 0)
-        return j - 1 + i*16;
+      if(actualTuple.atributeType == 0){
+        printf("\nposition last tuple: %d", ((j - 1) + (i*16)));
+        answer = ((j - 1) + (i*16));
+        return answer;
+      }
+      else if(actualTuple.atributeType == 2){
+        i = 0;
+        sector = actualTuple.virtualBlockNumber*2 + 4;
+        break;
+      }
 
       // lastTuple = fill_MFT(buffer, j);
     }
   }
-  return j + i*16;
+  answer = (j-1 + (i*16));
+  return answer;
 }

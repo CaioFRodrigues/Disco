@@ -94,7 +94,6 @@ int find_byte_position_in_logical_block(MFT* mft,int bytes);
 
 char* append_buffers( char* final_buffer, char* temp_buffer );
 
-
 void read_bytes(int starting_byte, int ending_byte, int bytes_to_copy, char* source, char* destination);
 
 DWORD virtual_block_to_logical_block(DWORD current_virtual_block, MFT* mft_list);
@@ -121,7 +120,6 @@ unsigned int find_empty_record_info(unsigned int lbn, unsigned int contigBlock);
 
 int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record);
 
-
 int write_on_last_tuple_MFT_and_set_0_second(unsigned int sector, struct t2fs_4tupla t, unsigned int tupleNum);
 
 int clear_sector(unsigned int sector);
@@ -137,5 +135,9 @@ int check_recordPosition_valid(unsigned int record_position, unsigned int writeB
 int write_new_arq(unsigned int record_position, char *isolated_filename, unsigned int writeBlock, DWORD type);
 
 int generic_create(char *filename, DWORD type);
+
+int find_father_record_and_add_byteRecord(char *filename, char *name);
+
+unsigned int search_record_in_dir_and_add(unsigned int sector, char *name);
 
 #endif

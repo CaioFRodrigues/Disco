@@ -706,7 +706,6 @@ int find_record_and_add_byteRecord(unsigned int sector, char *name)
   unsigned int s;
   unsigned int MFT_sec = sector;
   int g;
-  
 
 // search at MFT for desired info
   int i;
@@ -772,6 +771,111 @@ int find_record_and_add_byteRecord(unsigned int sector, char *name)
   return -1;
 }
 
+
+int find_father_record_and_add_byteRecord(char *filename, char *name)
+{
+  unsigned int MFT_sec = 6;
+
+  char *filenamecopy = strdup(filename);
+  char *token;
+  token = strtok(filenamecopy, "/");
+  MFT_sec = search_record_in_dir_and_add(MFT_sec, token);
+
+  while(strcmp(token, name) != 0)
+  {
+    token = strtok(NULL, "/");
+    printf("\ntoloko: %s",token);
+    printf("\nname: %s", name);
+    printf("\nmft secs: %u", MFT_sec);
+    MFT_sec = search_record_in_dir_and_add(MFT_sec, token); // MFT_of this directory
+    if(MFT_sec == -1){
+      printf("\npq ta dando essa bagaca?");
+      return -1;
+    }
+    printf("\nmft secs depois: %u", MFT_sec);
+    
+  }
+  // if(MFT_sec == -1)
+  //   return -1;
+
+  return 1;
+}
+
+// return sector of desired record_name
+unsigned int search_record_in_dir_and_add(unsigned int sector, char *name)
+{
+  unsigned char bufferMFT[SECTOR_SIZE];
+  unsigned char bufferBD[SECTOR_SIZE];
+  struct t2fs_4tupla t;
+  struct t2fs_record record;
+  int error;
+  unsigned int s;
+  unsigned int MFT_sec = sector;
+  // search at MFT for desired info
+  int i;
+  int j;
+  int k;
+  int p;
+  int r;
+  int g;
+  for(i = 0; i < 2; i++)
+  {// going through sectors
+    error = read_sector(MFT_sec + i, bufferMFT); // reading MFT register
+    if(error)
+      break;
+    for (j = 0; j < 16; j++)
+    { // going tuple by tuple in the sector
+      t = fill_MFT(bufferMFT, j);
+
+      if(t.atributeType == 0 || t.atributeType == -1){ // if end or non ecziste return error
+        // record = (struct t2fs_record)malloc(sizeof(struct t2fs_record));
+        return -1;
+      }
+      else if(t.atributeType == 2){ // if reached the end of the MFT register (the last tuple) go to the next register
+        i = 0;
+        MFT_sec = t.virtualBlockNumber * 2 + 4; // recebe o registro e o converte pro setor desse registro
+        break;
+      }
+        
+      else{
+        for(k = 0; k < t.numberOfContiguosBlocks; k++)
+        { // reading BD
+          s = (unsigned int)((t.logicalBlockNumber + k) * 4); // find the sector of the respective blocks
+          for(p = 0; p<4; p++) // read the whole block
+          {
+            error = read_sector(s + p, bufferBD); // reading BD register
+            if(error){
+              return -1;
+            }
+            for (r = 0; r < 4; r++)
+            { //each sector has max 4 records
+
+              record = fill_directory(bufferBD, r);
+              for(g = (int)strlen(record.name) + 1; g< MAX_FILE_NAME_SIZE; g++)
+                record.name[g] = 0x00;
+              if(strcmp(name, record.name)==0){
+                record.bytesFileSize = record.bytesFileSize + 64;
+                int directory_start =  r * RECORD_SIZE;
+                printf("\nrecord.bytesFileSize: %u", record.bytesFileSize);
+
+                if(write_record_in_dir(s+p, directory_start, record) != 1)
+                  return -1;
+
+                return record.MFTNumber*2 + 4;
+                
+              }
+            }
+          }
+        }
+      }
+
+    }
+  }
+
+
+  return -1;
+
+}
 
 int check_recordPosition_valid(unsigned int record_position, unsigned int writeBlock, struct t2fs_4tupla lastT, unsigned int lastTPositionSector, unsigned int lastTPosition)
 {
@@ -870,6 +974,9 @@ int generic_create(char *filename, DWORD type)
   // tokenRecord = strtok(fatherRecord, "/");
 
   unsigned int MFT_father = (unsigned int)get_parent_dir_MFT_sector(filename);
+  if(MFT_father == 4)
+    return -1; // wrong path
+
   printf("\nMFT_father: %u\n", MFT_father);
 
   token = strtok(filenamecopy, "/");
@@ -884,7 +991,7 @@ int generic_create(char *filename, DWORD type)
     //   break;
     // tokenRecord = strtok(fatherRecord, "/");
   }
-  printf("\nchegou aqui :O");
+  // printf("\nchegou aqui :O");
 
   tokenRecord = strtok(fatherRecord, "/");
   for (int o = 0; o < cont; o++)
@@ -895,15 +1002,20 @@ int generic_create(char *filename, DWORD type)
 
   // check if root
   // if tokenRecord == isolated filename, it means that is on Root dir
+  printf("\ntoken: %s\nisolated: %s",tokenRecord, isolated_filename);
   if(strcmp(tokenRecord, isolated_filename) != 0)
   {
     if(MFT_father >= 6){
       // this shall add 64bytes at the record father, cuz it's adding a new arq, that is 64 bytes
-      if(find_record_and_add_byteRecord(MFT_father, tokenRecord) != 1)
-          return -1;
+        if(find_father_record_and_add_byteRecord(filename, tokenRecord) != 1){
+          printf("\nTA CRASHANO AQUI");
+            return -1;
+        }
+        
     }
     else
     {
+      // printf("\nSE N AQUI AQUI");
       // if get_parent_dir_MFT_sector(filename) crashes
       return -1;
     }
@@ -915,17 +1027,19 @@ int generic_create(char *filename, DWORD type)
 
   unsigned int lastTPositionSector = MFT_father;
   lastT = find_last_tuple_MFT_register(lastTPositionSector); // last tuple with usable info, not type 0
-  unsigned int lastTPosition = (unsigned int)find_position_last_tuple_MFT_register(lastTPositionSector);
-  // printf("\nlast position sector: %u", lastTPositionSector);
-  // printf("\nlast position: %u", lastTPosition);
+  int lastTPosition = 0;
+  lastTPosition = find_position_last_tuple_MFT_register(lastTPositionSector);
+  printf("\nlast T position sector: %u", lastTPositionSector);
+  printf("\nLastT.atrType: %u\nLast.logicalBlockNumber: %u", lastT.atributeType, lastT.logicalBlockNumber);
+  printf("\nlast T position: %u", lastTPosition);
   
   // this shall go to the last tuple in the sequence of registers if necessary
-  while(lastT.atributeType == 2)
-  {
-    lastTPositionSector = lastT.virtualBlockNumber*2 + 4;
-    lastT = find_last_tuple_MFT_register(lastTPositionSector); // find last not 0 atributeType tuple
-    lastTPosition = find_position_last_tuple_MFT_register(lastTPositionSector);
-  }
+  // while(lastT.atributeType == 2)
+  // {
+  //   lastTPositionSector = lastT.virtualBlockNumber*2 + 4;
+  //   lastT = find_last_tuple_MFT_register(lastTPositionSector); // find last not 0 atributeType tuple
+  //   lastTPosition = find_position_last_tuple_MFT_register(lastTPositionSector);
+  // }
 
   // now gotta find the position of an empty record in the dir
   unsigned int empty_record_position = find_empty_record_info(lastT.logicalBlockNumber, lastT.numberOfContiguosBlocks);
@@ -941,3 +1055,11 @@ int generic_create(char *filename, DWORD type)
   else
     return 1;
 }
+
+
+// unsigned int find_MFT_father()
+// {
+
+
+  
+// }

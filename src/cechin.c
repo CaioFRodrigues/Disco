@@ -20,9 +20,12 @@ int main(int argc, char *argv[])
 	// create2("/file3");
 	// create2("/file4");
 	// create2("/file5");
-	mkdir2("/arateus");
-	mkdir2("/arateus/eh");
-	mkdir2("/arateus/eh/deuso");
+	// mkdir2("/arateus");
+	// mkdir2("/arateus/eh");
+	// mkdir2("/arateus/eh/deuso");
+	// mkdir2("/arateus/eh/deuso/metaleiro");
+	mkdir2("/MyUltimateIsReady");
+	create2("/MyUltimateIsReady/takeThis");
 
 
 

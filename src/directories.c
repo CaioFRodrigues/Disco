@@ -124,8 +124,11 @@ int get_parent_dir_MFT_sector(char *filename){
 	}
 
 	free(filenamecopy);
-	
 	return current_dir_sector;
+	// if(current_dir_sector != 4)
+	// 	return current_dir_sector;
+	// else
+	// 	return -1;
 
 }
 
