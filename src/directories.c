@@ -136,7 +136,7 @@ int get_parent_dir_MFT_sector(char *filename){
 //Caio
 //Given a t2fs_record and a filename, finds where the file is located and writes the content of the t2fs_record into it
 //Returns 0 if it has success, -1 if it fails
-int update_file_record_info(char * filename, struct t2fs_record record){
+int update_file_record_info(char * filename, struct t2fs_record * record){
 
 	int directory_MFT_sector = get_parent_dir_MFT_sector(filename);
 
@@ -175,7 +175,7 @@ int update_file_record_info(char * filename, struct t2fs_record record){
 //Caio
 // Given a name, a record and a buffer,  writes the record into the buffer of the file_name
 //Returns -1 if it has success, -1 if it fails
-int update_record_info(char *filename, struct t2fs_record record, int sector){
+int update_record_info(char *filename, struct t2fs_record * record, int sector){
 
 	//Reads current sector
 	unsigned char buffer[SECTOR_SIZE];
@@ -257,7 +257,6 @@ struct t2fs_record search_file_in_directory_given_MFT(char *name, MFT * mft){
 		for (int current_block = 0; current_block < aux->current_MFT.numberOfContiguosBlocks; current_block++){
 			//Gets next position by comparing the strings
 			int current_sector = current_block  + aux->current_MFT.logicalBlockNumber * 4;
-			printf ("oi oi oi %d\n", current_sector);
 			new_struct = search_file_in_directory(name, current_sector);
 			
 			//If it has found the file,returns it

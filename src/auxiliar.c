@@ -306,7 +306,6 @@ int alocate_needed_blocks(int blocks_needed, MFT* mft, MFT* last_mft){
       new_tuple.logicalBlockNumber = new_block;
       new_tuple.virtualBlockNumber = last_mft->current_MFT.virtualBlockNumber + last_mft->current_MFT.numberOfContiguosBlocks;
       new_tuple.numberOfContiguosBlocks = 1;
-      printf("***%d***", last_mft->sector);
 
       // Treat situation in which sector and/or register is full
       write_first_tuple_MFT_and_set_0_second(last_mft->sector, (last_mft->offset+1)*16, new_tuple);
@@ -437,7 +436,7 @@ unsigned int find_empty_record_info(unsigned int lbn, unsigned int contigBlock)
 // Write a record in a directory
 // given a sector and the byte position to insert the record, insert it in the desired position
 // return 1 if it worked and -1 if something went wrong
-int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record record)
+int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_record *record)
 {
   // unsigned int byte_sector = take_sector_from_empty_record_info(byte_pos);
   // unsigned int byte_record_pos = take_record_position_in_dir(byte_pos);
@@ -449,31 +448,31 @@ int write_record_in_dir(unsigned int sector, unsigned int byte_pos, struct t2fs_
     return -1;
 
   // write TypeVal
-  buffer[byte_pos] = record.TypeVal;
+  buffer[byte_pos] = record->TypeVal;
   // write name
   int i;
   for (i = 0; i < MAX_FILE_NAME_SIZE; i++)
   {
-    buffer[byte_pos+RECORD_NAME+i] = record.name[i];
+    buffer[byte_pos+RECORD_NAME+i] = record->name[i];
   }
 
   unsigned int aux;
   // write in buffer the blocksFileSize
   for (i = 0; i < 4; i++)
   {
-    aux = (record.blocksFileSize >> 8*i)&0xff;
+    aux = (record->blocksFileSize >> 8*i)&0xff;
     buffer[byte_pos+RECORD_BLOCK_FILESIZE+i] = aux;
   }
   //write in buffer for the bytesFileSize
   for (i = 0; i < 4; i++)
   {
-    aux = (record.bytesFileSize >> 8*i)&0xff;
+    aux = (record->bytesFileSize >> 8*i)&0xff;
     buffer[byte_pos+RECORD_BYTES_FILESIZE+i] = aux;
   }
   // write for the MFTNumber
   for (i = 0; i < 4; i++)
   {
-    aux = (record.MFTNumber >> 8*i)&0xff;
+    aux = (record->MFTNumber >> 8*i)&0xff;
     buffer[byte_pos+RECORD_MFTNUMBER+i] = aux;
   }
 
@@ -786,7 +785,7 @@ int find_record_and_add_byteRecord(unsigned int sector, char *name)
                 int directory_start =  r * RECORD_SIZE;
                 printf("\nrecord.bytesFileSize: %u", record.bytesFileSize);
 
-                error = write_record_in_dir(s+p, directory_start, record);
+                error = write_record_in_dir(s+p, directory_start, &record);
                 if(error)
                   return -1;
                 return 1;
@@ -799,9 +798,6 @@ int find_record_and_add_byteRecord(unsigned int sector, char *name)
 
     }
   }
-
-
-
   return -1;
 }
 
@@ -891,7 +887,7 @@ unsigned int search_record_in_dir_and_add(unsigned int sector, char *name)
                 record.bytesFileSize = record.bytesFileSize + 64;
                 int directory_start =  r * RECORD_SIZE;
 
-                if(write_record_in_dir(s+p, directory_start, record) != 1)
+                if(write_record_in_dir(s+p, directory_start, &record) != 1)
                   return -1;
 
                 return record.MFTNumber*2 + 4;
@@ -982,7 +978,7 @@ int write_new_arq(unsigned int record_position, char *isolated_filename, unsigne
     return -1;
   
   //write the record in the dir
-  if(write_record_in_dir(writeBlock*4 + empty_record_sector_aux, empty_record_pos_aux, record) != 1)
+  if(write_record_in_dir(writeBlock*4 + empty_record_sector_aux, empty_record_pos_aux, &record) != 1)
     return -1;
 
 
@@ -1124,9 +1120,8 @@ struct t2fs_record *find_record(char *filename, char *name)
   }
   // if(MFT_sec == -1)
   //   return -1;
-
-  
-// }
+  return record;
+}
 
 //Given a filename and an mft_sector, creates a FILE_DESCRIPTOR with the info and returns it
 FILE_DESCRIPTOR create_descriptor (char * filename, int file_mft_sector){
@@ -1200,7 +1195,7 @@ FILE2 open_file (char *filename, int mode){
 
   FILE_DESCRIPTOR file_descriptor =  create_descriptor(filename, file_mft_sector);
 
-//Allocates file on opened_files or opened_directories
+  //Allocates file on opened_files or opened_directories
   int index = allocate_handler(file_descriptor, mode);
 
   
@@ -1252,9 +1247,8 @@ int clear_file(MFT* mft, int current_pointer){
     int first_block = mft->current_MFT.logicalBlockNumber;
 
     // MFT MUST BE CHANGED
-    if (passed_blocks+number_blocks-1 >= pointer_block){
       
-      if (passed_blocks <= pointer_block){
+      if (passed_blocks < pointer_block){
         // Current_pointer is in this MFT
         int blocks_left = number_blocks;
         for (i=0; i<number_blocks; i++){
@@ -1272,21 +1266,18 @@ int clear_file(MFT* mft, int current_pointer){
       else{
         // MFT must be invalidated
         for (i=0; i<number_blocks; i++){
-
           if (passed_blocks + i > pointer_block){
             setBitmap2(first_block + i, 0);
           }
           
-          mft->current_MFT.atributeType = 0xffff;
+          mft->current_MFT.atributeType = 0xffffffff;
           write_first_tuple_MFT_and_set_0_second(mft->sector, mft->offset*16, mft->current_MFT);
 
         }
       }
-    }
     mft = mft->next;
   }	
   return 0;
-  return record;
 }
 
 struct t2fs_record *search_record_in_dir(unsigned int sector, char *name)
@@ -1364,7 +1355,6 @@ struct t2fs_record *search_record_in_dir(unsigned int sector, char *name)
   return NULL;
 
 }
-
 
 struct t2fs_record *path_return_record2(char* path)
 {

@@ -55,12 +55,14 @@ int closedir2(DIR2 handle){
 //Ana
 int seek2(FILE2 handle, DWORD offset){
 
+
   // Error cases
   if (!opened_files[handle].is_valid)
     return -1;
 
   if (offset > opened_files[handle].fileSizeBytes)
     return -1;
+
 
   if (offset != -1){  // Offset always counted from the start of the file (current_pointer = 0) 
     opened_files[handle].current_pointer = offset;
@@ -225,15 +227,20 @@ int write2(FILE2 handle, char *buffer, int size)
   MFT *mft = read_MFT(opened_files[handle].first_MFT_tuple); // For tests only
 
 
-  int parent_MFT_sector = get_parent_dir_MFT_sector(opened_files[handle].file_path);
+  // int parent_MFT_sector = get_parent_dir_MFT_sector(opened_files[handle].file_path);
 
-  MFT *current_mft = read_MFT(parent_MFT_sector);
+  // MFT *current_mft = read_MFT(parent_MFT_sector);
 
-  struct t2fs_record directory_record = search_file_in_directory_given_MFT(strrchr(opened_files[handle].file_path, '/') + 1, current_mft);
-  if (size > directory_record.bytesFileSize)
-    directory_record.bytesFileSize = current_pointer + size;
+  struct t2fs_record *directory_record = NULL;
+  directory_record = path_return_record2(opened_files[handle].file_path);
+    if (directory_record == NULL)
+    return -1;
 
-  directory_record.blocksFileSize = blocks_needed;
+  // struct t2fs_record directory_record = search_file_in_directory_given_MFT(strrchr(opened_files[handle].file_path, '/') + 1, current_mft);
+  if (size > directory_record->bytesFileSize)
+    directory_record->bytesFileSize = current_pointer + size;
+
+  directory_record->blocksFileSize = blocks_needed;
   update_file_record_info(opened_files[handle].file_path, directory_record);
   // Update the current_pointer to the byte right after the last one written
   opened_files[handle].current_pointer = size + current_pointer + 1;
@@ -335,7 +342,7 @@ int write2(FILE2 handle, char *buffer, int size)
 }
 
 // Ana
-int truncate2 (FILE2 handle){
+int truncate2(FILE2 handle){
   
   if (!opened_files[handle].is_valid)
     return -1;
@@ -343,16 +350,16 @@ int truncate2 (FILE2 handle){
   int current_pointer = opened_files[handle].current_pointer;
   MFT* mft = read_MFT(opened_files[handle].first_MFT_tuple);
 
-  int parent_MFT_sector = get_parent_dir_MFT_sector(opened_files[handle].file_path);
-  
-  MFT* current_mft = read_MFT(parent_MFT_sector);
+  struct t2fs_record *directory_record = NULL;
+  directory_record = path_return_record2(opened_files[handle].file_path);
 
-  struct t2fs_record file_record = search_file_in_directory_given_MFT( strrchr(opened_files[handle].file_path, '/') + 1, current_mft);
+  if (directory_record == NULL)
+    return -1;
 
-  file_record.blocksFileSize -= ceil(current_pointer/1024.0);
-  file_record.bytesFileSize = current_pointer + 1 ;
+  directory_record->blocksFileSize = ceil(current_pointer/1024.0);
+  directory_record->bytesFileSize = current_pointer + 1 ;
 
-  update_file_record_info(opened_files[handle].file_path, file_record);
+  update_file_record_info(opened_files[handle].file_path, directory_record);
 
   // Write record to disk
 
@@ -364,40 +371,50 @@ int truncate2 (FILE2 handle){
 // Ana
 int delete2 (char *filename){
 
-  int parent_MFT_sector = get_parent_dir_MFT_sector(filename);
-  
-  MFT* current_mft = read_MFT(parent_MFT_sector);
+  struct t2fs_record *directory_record = NULL;
+  directory_record = path_return_record2(filename);
 
-  struct t2fs_record file_record = search_file_in_directory_given_MFT( strrchr(filename, '/') + 1, current_mft);
-
+  if (directory_record == NULL)
+    return -1;
   // Initialize it with path_return_record
-  file_record.TypeVal = 0;
+  directory_record->TypeVal = 0;
 
-  update_file_record_info(filename, file_record);
+  update_file_record_info(filename, directory_record);
 
   // Write record to disk
-  
-  MFT* mft; // Mock structure
+  MFT* mft = read_MFT(directory_record->MFTNumber*2 + 4);
   clear_file(mft, 0);
   return 0;
 }
 
 int rmdir2(char* pathname){
 
-  int parent_MFT_sector = get_parent_dir_MFT_sector(pathname);
-  
-  MFT* current_mft = read_MFT(parent_MFT_sector);
+  struct t2fs_record *directory_record = NULL;
+  directory_record = path_return_record2(pathname);
+  if (directory_record == NULL)
+    return -1;
 
-  struct t2fs_record file_record = search_file_in_directory_given_MFT( strrchr(pathname, '/') + 1, current_mft);
-
-  file_record.TypeVal = 0;
-  update_file_record_info(pathname, file_record);
+  directory_record->TypeVal = 0;
+  update_file_record_info(pathname, directory_record);
 
   // Write record to disk
   
-  MFT* mft; // Mock structure
+  MFT* mft = read_MFT(directory_record->MFTNumber*2 + 4); // Mock structure
   clear_file(mft, 0);
 
   return 0;
 
+}
+
+int readdir2(DIR2 handle, DIRENT2 * dentry){
+
+  struct t2fs_record *directory_record = NULL;
+  directory_record = path_return_record2(opened_directories[handle].file_path);
+
+  MFT* mft = read_MFT(directory_record->MFTNumber*2 + 4);
+  int directory_block = opened_directories[handle].current_pointer;
+  
+  opened_directories[handle].current_pointer++;
+
+  return 0;
 }
