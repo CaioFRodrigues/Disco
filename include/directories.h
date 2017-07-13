@@ -44,6 +44,7 @@ int update_record_info(char *filename, struct t2fs_record* record, int sector);
 
 struct t2fs_record search_file_in_directory_given_MFT(char *name, MFT * mft);
 
+struct t2fs_record * search_file_given_index_and_directory_mft_sector(int directory_mft_sector, int index_of_file);
 
 #endif
 

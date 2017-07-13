@@ -270,3 +270,43 @@ struct t2fs_record search_file_in_directory_given_MFT(char *name, MFT * mft){
 
 	return new_struct;
 }
+
+
+
+struct t2fs_record * search_file_given_index_and_directory_mft_sector(int directory_mft_sector, int index_of_file){
+
+	MFT * directory_MFT = read_MFT(directory_mft_sector);
+
+	int desired_VBN = index_of_file / 16;
+
+	int sector = -1;
+
+	while (directory_MFT != NULL){
+		if (desired_VBN >= directory_MFT->current_MFT.virtualBlockNumber && desired_VBN <= directory_MFT->current_MFT.virtualBlockNumber + directory_MFT->current_MFT.numberOfContiguosBlocks){
+			int virtual_offset = desired_VBN - directory_MFT->current_MFT.virtualBlockNumber;
+			sector = (directory_MFT->current_MFT.logicalBlockNumber + virtual_offset) * 4;
+		}
+		else{
+			directory_MFT = directory_MFT->next;
+		}
+	}
+
+	if (sector == -1){
+		return NULL;
+	}
+
+	int directory_index_in_block = index_of_file % 16;
+
+	int sector_in_block = directory_index_in_block /4;
+
+	int index = directory_index_in_block % 4;
+
+	unsigned char buffer[256];
+
+	read_sector(sector + sector_in_block, buffer);
+
+	struct t2fs_record * record = malloc(sizeof(struct t2fs_record)); 
+	*record = fill_directory(buffer, index);
+
+	return record;
+}

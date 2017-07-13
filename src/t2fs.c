@@ -411,9 +411,19 @@ int readdir2(DIR2 handle, DIRENT2 * dentry){
   struct t2fs_record *directory_record = NULL;
   directory_record = path_return_record2(opened_directories[handle].file_path);
 
-  MFT* mft = read_MFT(directory_record->MFTNumber*2 + 4);
-  int directory_block = opened_directories[handle].current_pointer;
+
   
+  int directory_block = opened_directories[handle].current_pointer;
+
+  struct t2fs_record * record = search_file_given_index_and_directory_mft_sector(directory_record->MFTNumber*2 + 4, directory_block);
+
+  strcpy(dentry->name, record->name);
+
+  dentry->fileType = record->TypeVal;
+
+  dentry->fileSize = record->bytesFileSize;
+
+
   opened_directories[handle].current_pointer++;
 
   return 0;

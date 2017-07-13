@@ -1124,7 +1124,7 @@ struct t2fs_record *find_record(char *filename, char *name)
 }
 
 //Given a filename and an mft_sector, creates a FILE_DESCRIPTOR with the info and returns it
-FILE_DESCRIPTOR create_descriptor (char * filename, int file_mft_sector){
+FILE_DESCRIPTOR create_descriptor (char * filename, int file_mft_sector, int file_byte_size){
     
   FILE_DESCRIPTOR file_descriptor;
 
@@ -1182,6 +1182,7 @@ FILE2 open_file (char *filename, int mode){
   if (parent_sector == -1)
     return -1;
 
+  struct t2fs_record dir_entry = search_file_in_directory_given_MFT(filename, read_MFT(parent_sector));
 
   int file_mftnumber = get_MFTnumber_of_file_with_directory_number(isolated_filename, parent_sector, mode);
 
@@ -1193,7 +1194,10 @@ FILE2 open_file (char *filename, int mode){
   int file_mft_sector = (file_mftnumber * SECTOR_PER_MFT) + BOOT_BLOCK_SIZE;
 
 
-  FILE_DESCRIPTOR file_descriptor =  create_descriptor(filename, file_mft_sector);
+
+
+
+  FILE_DESCRIPTOR file_descriptor =  create_descriptor(filename, file_mft_sector,  dir_entry.bytesFileSize);
 
   //Allocates file on opened_files or opened_directories
   int index = allocate_handler(file_descriptor, mode);
@@ -1231,7 +1235,7 @@ int allocate_handler(struct file_descriptor file_descriptor, int mode){
 
 int open_root_file(){
 
-  FILE_DESCRIPTOR desc = create_descriptor ("/", ROOT_MFT);
+  FILE_DESCRIPTOR desc = create_descriptor ("/", ROOT_MFT, 0);
   int handle = allocate_handler(desc, 2);
   return handle;
 }

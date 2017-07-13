@@ -137,7 +137,7 @@ int generic_create(char *filename, DWORD type);
 int find_father_record_and_add_byteRecord(char *filename, char *name);
 
 unsigned int search_record_in_dir_and_add(unsigned int sector, char *name);
-FILE_DESCRIPTOR create_descriptor (char * filename, int file_mft_sector);
+FILE_DESCRIPTOR create_descriptor (char * filename, int file_mft_sector, int file_byte_size);
 
 FILE2 open_file (char *filename, int mode);
 
