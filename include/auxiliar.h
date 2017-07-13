@@ -146,4 +146,10 @@ int allocate_handler(struct file_descriptor file_descriptor, int mode);
 int open_root_file();
 int clear_file(MFT* mft, int current_pointer);
 
+struct t2fs_record *find_record(char *filename, char *name);
+
+struct t2fs_record *search_record_in_dir(unsigned int sector, char *name);
+
+struct t2fs_record *path_return_record2(char* path);
+
 #endif
